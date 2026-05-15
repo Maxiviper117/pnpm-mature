@@ -40,12 +40,13 @@ export interface PackageManifestState {
 export async function readPackageManifest(projectDir: string): Promise<PackageManifestState> {
   const manifestPath = path.join(projectDir, "package.json");
   const content = await readFile(manifestPath, "utf8");
+  const manifest = parsePackageManifest(content);
 
   return {
     path: manifestPath,
     content,
     indent: detectIndentation(content),
-    manifest: JSON.parse(content) as PackageManifest,
+    manifest,
   };
 }
 
@@ -80,7 +81,58 @@ export function collectDirectDependencies(manifest: PackageManifest): {
 
 function detectIndentation(content: string): string {
   const match = content.match(/^([ \t]+)"/m);
-  return match?.[1] ?? "  ";
+  const indent = match?.[1];
+
+  if (!indent || /[^ \t]/.test(indent)) {
+    return "  ";
+  }
+
+  return indent;
+}
+
+function parsePackageManifest(content: string): PackageManifest {
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(content);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Invalid package.json: ${message}`, { cause: error });
+  }
+
+  if (!isPlainObject(parsed)) {
+    throw new Error("Invalid package.json: top-level value must be a JSON object");
+  }
+
+  const manifest = parsed as PackageManifest;
+
+  if (manifest.pnpm !== undefined && !isPlainObject(manifest.pnpm)) {
+    throw new Error("Invalid package.json: pnpm field must be an object");
+  }
+
+  for (const field of SUPPORTED_FIELDS) {
+    const group = manifest[field];
+
+    if (group === undefined) {
+      continue;
+    }
+
+    if (!isRecordOfStrings(group)) {
+      throw new Error(
+        `Invalid package.json: ${field} must be an object mapping package names to strings`,
+      );
+    }
+  }
+
+  return manifest;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isRecordOfStrings(value: unknown): value is Record<string, string> {
+  return isPlainObject(value) && Object.values(value).every((entry) => typeof entry === "string");
 }
 
 function getUnsupportedReason(spec: string): string | undefined {

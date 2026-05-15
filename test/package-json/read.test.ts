@@ -1,7 +1,17 @@
-import { describe, expect, it } from "vitest";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 
-import { collectDirectDependencies } from "../../src/package-json/read";
+import { afterEach, describe, expect, it } from "vitest";
+
+import { collectDirectDependencies, readPackageManifest } from "../../src/package-json/read";
 import type { PackageManifest } from "../../src/types";
+
+const tempDirs: string[] = [];
+
+afterEach(async () => {
+  await Promise.all(tempDirs.splice(0).map((dir) => rm(dir, { force: true, recursive: true })));
+});
 
 describe("collectDirectDependencies", () => {
   it("collects supported dependency groups and skips unsupported protocols", () => {
@@ -45,3 +55,32 @@ describe("collectDirectDependencies", () => {
     ]);
   });
 });
+
+describe("readPackageManifest", () => {
+  it("throws a friendly error for invalid JSON", async () => {
+    const projectDir = await createProjectDir('{\n  "name": "broken",\n');
+
+    await expect(readPackageManifest(projectDir)).rejects.toThrow(/^Invalid package\.json:/);
+  });
+
+  it("rejects non-object dependency groups", async () => {
+    const projectDir = await createProjectDir(JSON.stringify({ dependencies: null }, null, 2));
+
+    await expect(readPackageManifest(projectDir)).rejects.toThrow(
+      "Invalid package.json: dependencies must be an object mapping package names to strings",
+    );
+  });
+
+  it("falls back to two spaces when no indentation can be detected", async () => {
+    const projectDir = await createProjectDir('{"name":"pnpm-mature"}\n');
+
+    await expect(readPackageManifest(projectDir)).resolves.toMatchObject({ indent: "  " });
+  });
+});
+
+async function createProjectDir(packageJson: string): Promise<string> {
+  const projectDir = await mkdtemp(path.join(os.tmpdir(), "pnpm-mature-read-"));
+  tempDirs.push(projectDir);
+  await writeFile(path.join(projectDir, "package.json"), packageJson, "utf8");
+  return projectDir;
+}

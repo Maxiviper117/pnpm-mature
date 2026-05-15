@@ -5,14 +5,13 @@ export async function runPnpmCommand(
   command: "update" | "install",
   args: string[] = [],
 ): Promise<number> {
-  const useShell = process.platform === "win32";
-  const executable = useShell ? "pnpm" : "pnpm";
+  const executable = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 
   return await new Promise<number>((resolve, reject) => {
     const child = spawn(executable, [command, ...args], {
       cwd: projectDir,
       stdio: "inherit",
-      shell: useShell,
+      shell: false,
     });
 
     child.once("error", (error) => {

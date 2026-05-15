@@ -4,6 +4,7 @@ import { Command, InvalidArgumentError, Option } from "commander";
 
 import { runInstallCommand } from "./commands/install";
 import { runUpdateCommand } from "./commands/update";
+import { normalizeDependencyNames } from "./package-name/normalize";
 import type { CommandOptions } from "./types";
 
 const program = new Command();
@@ -96,12 +97,4 @@ function parseIgnorePinnedLevel(value: string): "all" | "major" | "minor" {
   }
 
   throw new InvalidArgumentError("must be one of all, major, or minor");
-}
-
-function normalizeDependencyNames(packages: string[]): string[] | undefined {
-  if (packages.length === 0) {
-    return undefined;
-  }
-
-  return [...new Set(packages)];
 }

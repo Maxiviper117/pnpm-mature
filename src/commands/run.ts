@@ -78,7 +78,7 @@ export async function runMatureCommand(
     return await runPnpmCommand(options.projectDir, command, options.dependencyNames ?? []);
   } finally {
     cleanupHandlers.dispose();
-    await restore();
+    await cleanupHandlers.cleanup();
   }
 }
 
@@ -194,39 +194,49 @@ function formatVersionLine(version: { version: string; publishedAt: Date } | und
   return `${version.version} (${version.publishedAt.toISOString().slice(0, 10)})`;
 }
 
-function installCleanupHandlers(restore: () => Promise<void>): { dispose: () => void } {
-  let restoring = false;
+function installCleanupHandlers(restore: () => Promise<void>): {
+  cleanup: () => Promise<void>;
+  dispose: () => void;
+} {
+  let restorePromise: Promise<void> | undefined;
+  let disposed = false;
 
   const cleanup = async () => {
-    if (restoring) {
+    if (!restorePromise) {
+      restorePromise = restore();
+    }
+
+    await restorePromise;
+  };
+
+  const dispose = () => {
+    if (disposed) {
       return;
     }
 
-    restoring = true;
-    await restore();
+    disposed = true;
+    process.removeListener("SIGINT", handleSignal);
+    process.removeListener("SIGTERM", handleSignal);
   };
 
   const handleSignal = (signal: NodeJS.Signals) => {
-    void cleanup().finally(() => {
-      process.kill(process.pid, signal);
-    });
-  };
-
-  const handleExit = () => {
-    void cleanup();
+    dispose();
+    void cleanup()
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(pc.red(`Failed to restore package.json after ${signal}: ${message}`));
+        process.exitCode = 1;
+      })
+      .finally(() => {
+        process.kill(process.pid, signal);
+      });
   };
 
   process.once("SIGINT", handleSignal);
   process.once("SIGTERM", handleSignal);
-  process.once("uncaughtException", handleExit);
-  process.once("unhandledRejection", handleExit);
 
   return {
-    dispose: () => {
-      process.removeListener("SIGINT", handleSignal);
-      process.removeListener("SIGTERM", handleSignal);
-      process.removeListener("uncaughtException", handleExit);
-      process.removeListener("unhandledRejection", handleExit);
-    },
+    cleanup,
+    dispose,
   };
 }

@@ -1,6 +1,5 @@
-import { access, readFile, rm, writeFile } from "node:fs/promises";
+import { readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { constants } from "node:fs";
 
 import { readPackageManifest } from "../package-json/read";
 import type { PackageManifest } from "../types";
@@ -9,16 +8,32 @@ const BACKUP_FILENAME = ".pnpm-mature.package.json.bak";
 
 export async function recoverPackageJsonIfNeeded(projectDir: string): Promise<void> {
   const backupPath = getBackupPath(projectDir);
+  let backupContent: string;
 
   try {
-    await access(backupPath, constants.F_OK);
-  } catch {
-    return;
+    backupContent = await readFile(backupPath, "utf8");
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return;
+    }
+
+    throw error;
+  }
+
+  try {
+    JSON.parse(backupContent);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Backup package.json is invalid: ${message}`, { cause: error });
   }
 
   const state = await readPackageManifest(projectDir);
-  await writeFile(state.path, await readFile(backupPath, "utf8"), "utf8");
+  await writeFile(state.path, backupContent, "utf8");
   await rm(backupPath, { force: true });
+}
+
+function isMissingFileError(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 }
 
 export async function applyTemporaryOverrides(

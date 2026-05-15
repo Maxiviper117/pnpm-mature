@@ -2,6 +2,10 @@ import * as semver from "semver";
 
 import type { RegistryPackageMeta, RegistryVersionMeta } from "../types";
 
+const REGISTRY_URL = "https://registry.npmjs.org";
+const REGISTRY_TIMEOUT_MS = 30_000;
+const MAX_PACKUMENT_BYTES = 5 * 1024 * 1024;
+
 interface RegistryPackument {
   name?: string;
   time?: Record<string, string>;
@@ -12,7 +16,10 @@ interface RegistryPackument {
 }
 
 export async function fetchRegistryPackageMeta(packageName: string): Promise<RegistryPackageMeta> {
-  const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}`);
+  const response = await fetch(`${REGISTRY_URL}/${encodeURIComponent(packageName)}`, {
+    redirect: "error",
+    signal: AbortSignal.timeout(REGISTRY_TIMEOUT_MS),
+  });
 
   if (!response.ok) {
     throw new Error(
@@ -20,7 +27,7 @@ export async function fetchRegistryPackageMeta(packageName: string): Promise<Reg
     );
   }
 
-  const packument = (await response.json()) as RegistryPackument;
+  const packument = await readPackument(response);
   const versions = collectVersions(packument);
 
   return {
@@ -28,6 +35,56 @@ export async function fetchRegistryPackageMeta(packageName: string): Promise<Reg
     latestVersion: packument["dist-tags"]?.latest,
     versions,
   };
+}
+
+async function readPackument(response: Response): Promise<RegistryPackument> {
+  const reader = response.body?.getReader();
+
+  if (!reader) {
+    throw new Error("npm registry returned an empty response body");
+  }
+
+  const chunks: Uint8Array[] = [];
+  let totalBytes = 0;
+
+  while (true) {
+    // The stream must be consumed chunk-by-chunk to enforce a byte limit.
+    // oxlint-disable-next-line eslint/no-await-in-loop
+    const { done, value } = await reader.read();
+
+    if (done) {
+      break;
+    }
+
+    totalBytes += value.byteLength;
+
+    if (totalBytes > MAX_PACKUMENT_BYTES) {
+      throw new Error("npm registry response exceeded the 5 MiB safety limit");
+    }
+
+    chunks.push(value);
+  }
+
+  const body = new TextDecoder().decode(concatenateChunks(chunks, totalBytes));
+  const parsed = JSON.parse(body) as unknown;
+
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new Error("npm registry returned an invalid packument payload");
+  }
+
+  return parsed as RegistryPackument;
+}
+
+function concatenateChunks(chunks: Uint8Array[], totalBytes: number): Uint8Array {
+  const combined = new Uint8Array(totalBytes);
+  let offset = 0;
+
+  for (const chunk of chunks) {
+    combined.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  return combined;
 }
 
 function collectVersions(packument: RegistryPackument): RegistryVersionMeta[] {
@@ -43,9 +100,15 @@ function collectVersions(packument: RegistryPackument): RegistryVersionMeta[] {
       continue;
     }
 
+    const publishedAtDate = new Date(publishedAt);
+
+    if (Number.isNaN(publishedAtDate.getTime())) {
+      continue;
+    }
+
     versions.push({
       version,
-      publishedAt: new Date(publishedAt),
+      publishedAt: publishedAtDate,
       deprecated: manifest.deprecated,
     });
   }

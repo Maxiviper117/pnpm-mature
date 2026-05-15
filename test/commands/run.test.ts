@@ -128,6 +128,53 @@ describe("runMatureCommand", () => {
     expect(fetchRegistryPackageMeta).not.toHaveBeenCalled();
     expect(runPnpmCommand).not.toHaveBeenCalled();
   });
+
+  it("disposes signal handlers before re-raising termination signals", async () => {
+    let sigintHandler: ((signal: NodeJS.Signals) => void) | undefined;
+    const processOnce = vi.spyOn(process, "once");
+    const removeListener = vi.spyOn(process, "removeListener");
+    const processKill = vi.spyOn(process, "kill").mockImplementation(() => true);
+    let restored = false;
+    const restore = vi.fn<() => Promise<void>>(async () => {
+      if (restored) {
+        return;
+      }
+
+      restored = true;
+    });
+
+    processOnce.mockImplementation(((event: string, listener: (...args: unknown[]) => void) => {
+      if (event === "SIGINT") {
+        sigintHandler = listener as (signal: NodeJS.Signals) => void;
+      }
+
+      return process;
+    }) as typeof process.once);
+
+    asMock(applyTemporaryOverrides).mockResolvedValue(restore);
+    asMock(runPnpmCommand).mockImplementation(async () => {
+      sigintHandler?.("SIGINT");
+      return 130;
+    });
+
+    await expect(
+      runMatureCommand("update", { ...baseOptions, dependencyNames: ["react"] }),
+    ).resolves.toBe(130);
+
+    expect(restore).toHaveBeenCalledTimes(1);
+    expect(processKill).toHaveBeenCalledWith(process.pid, "SIGINT");
+    expect(removeListener).toHaveBeenCalledWith("SIGINT", expect.any(Function));
+    const firstRemoveCall = removeListener.mock.invocationCallOrder[0];
+    const firstKillCall = processKill.mock.invocationCallOrder[0];
+
+    expect(firstRemoveCall).toBeDefined();
+    expect(firstKillCall).toBeDefined();
+    expect(firstRemoveCall!).toBeLessThan(firstKillCall!);
+
+    processOnce.mockRestore();
+    removeListener.mockRestore();
+    processKill.mockRestore();
+  });
 });
 
 function createSelection(name: string, spec: string): DependencySelection {

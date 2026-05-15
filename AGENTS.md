@@ -79,10 +79,11 @@ npm pack --dry-run
 - Release workflow lives in `.github/workflows/release-please.yml`.
 - Docs deployment workflow lives in `.github/workflows/deploy-docs.yml`.
 - Release Please is manifest-driven for the root Node package and uses the fixed component/tag format `pnpm-mature-v<version>`.
+- Release publishes run to completion for a given ref; do not reintroduce `cancel-in-progress` on the release workflow unless the publish flow changes.
 - `bump-minor-pre-major: true` keeps breaking changes below `1.0.0` until an intentional stable release is requested.
 - Release Please creates release PRs and GitHub releases. npm publishing runs automatically in CI after a Release Please release is created on `main`.
 - The workflow may use an optional `RELEASE_PLEASE_TOKEN` secret; otherwise it falls back to `GITHUB_TOKEN`.
-- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC. Keep `id-token: write` intact unless the publishing model changes.
+- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC and publishes with `npm publish --access public --provenance`. Keep `id-token: write` intact unless the publishing model changes.
 - When ready for the first stable release, use a commit footer like `Release-As: 1.0.0`.
 - Keep commits Conventional Commits-compatible so Release Please can infer versions. Examples:
   - `feat: add maturity-aware install command`
@@ -96,6 +97,7 @@ npm pack --dry-run
 - `src/cli.ts` is the npm binary entrypoint and defines the Commander CLI.
 - `src/commands/update.ts` and `src/commands/install.ts` are thin command adapters over the shared runner.
 - `src/commands/run.ts` owns the main workflow: validate options, discover dependencies, fetch registry metadata, select mature versions, report decisions, inject temporary overrides, delegate to pnpm, and restore state.
+- `src/package-name/normalize.ts` validates and deduplicates CLI-targeted package names before command execution.
 - `src/package-json/read.ts` reads `package.json`, detects indentation, and classifies supported versus unsupported dependency specs.
 - `src/registry/npm.ts` fetches npm packuments and converts them into sorted version metadata.
 - `src/maturity/filter.ts` applies semver compatibility plus minimum-age selection logic.
@@ -120,6 +122,7 @@ npm pack --dry-run
 - Keep generated `dist/` files out of source edits unless intentionally rebuilding package output.
 - Use Oxfmt for formatting; do not introduce Prettier unless there is a specific gap that Oxfmt cannot cover.
 - Keep `workbench/` gitignored and local-only. It is a convenience area for manual testing and should not become part of the published package or documented product surface.
+- Keep CI installs lockfile-strict with `bun install --frozen-lockfile` unless the package manager strategy changes.
 
 ## Product Defaults
 
