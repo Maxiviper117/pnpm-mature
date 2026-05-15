@@ -1,0 +1,145 @@
+# AGENTS.md
+
+## Project
+
+pnpm-mature is a lightweight TypeScript CLI that wraps pnpm with maturity-aware dependency selection. It inspects npm registry publish dates, chooses the newest semver-compatible version older than a configured age threshold, injects temporary `pnpm.overrides`, and then delegates resolution back to pnpm. The npm package is `@maxiviper117/pnpm-mature`; the CLI binary is `pnpm-mature`.
+
+Keep this file up to date whenever project workflow, release automation, docs structure, or architectural boundaries change.
+
+## Tooling
+
+- Package manager: `bun`
+- Runtime target: portable Node.js CLI output
+- Development runtime: Bun 1.3.x
+- Minimum Node.js engine: 18.17+
+- Module format: native ESM
+- CLI framework: Commander
+- HTTP client: native `fetch`
+- Terminal styling: Picocolors
+- Semver logic: `semver`
+- Formatter: Oxfmt
+- Linter: Oxlint
+- Tests: Vitest
+- Docs: VitePress
+- Releases: Google Release Please normal pre-1.0 releases
+- TypeScript config:
+  - `tsconfig.json` for editor diagnostics and no-emit typechecking across source and tests
+
+## Commands
+
+- Install dependencies: `bun install`
+- Typecheck: `bun run check`
+- Test: `bun run test`
+- Test watch: `bun run test:watch`
+- Format: `bun run fmt`
+- Format check: `bun run fmt:check`
+- Lint: `bun run lint`
+- Lint fix: `bun run lint:fix`
+- Build CLI: `bun run build`
+- Docs dev server: `bun run docs:dev`
+- Docs build: `bun run docs:build`
+- Docs preview: `bun run docs:preview`
+- Package dry run: `npm pack --dry-run`
+
+Before finishing code changes, run:
+
+```bash
+bun run fmt:check
+bun run test
+bun run lint
+bun run check
+bun run build
+```
+
+If `bun run fmt:check` fails, run:
+
+```bash
+bun run fmt
+bun run fmt:check
+```
+
+If your change touches docs, also run:
+
+```bash
+bun run docs:build
+```
+
+For publishing-related changes, also run:
+
+```bash
+npm pack --dry-run
+```
+
+## Releases
+
+- CI workflow lives in `.github/workflows/ci.yml`.
+- CI currently runs on both pushes and pull requests.
+- Release Please config lives in `release-please-config.json`.
+- Release Please manifest lives in `.release-please-manifest.json`.
+- Release workflow lives in `.github/workflows/release-please.yml`.
+- Docs deployment workflow lives in `.github/workflows/deploy-docs.yml`.
+- Release Please is manifest-driven for the root Node package and uses the fixed component/tag format `pnpm-mature-v<version>`.
+- `bump-minor-pre-major: true` keeps breaking changes below `1.0.0` until an intentional stable release is requested.
+- Release Please creates release PRs and GitHub releases. npm publishing runs automatically in CI after a Release Please release is created on `main`.
+- The workflow may use an optional `RELEASE_PLEASE_TOKEN` secret; otherwise it falls back to `GITHUB_TOKEN`.
+- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC. Keep `id-token: write` intact unless the publishing model changes.
+- When ready for the first stable release, use a commit footer like `Release-As: 1.0.0`.
+- Keep commits Conventional Commits-compatible so Release Please can infer versions. Examples:
+  - `feat: add maturity-aware install command`
+  - `fix: restore package.json after failed pnpm run`
+  - `docs: expand VitePress CLI examples`
+  - `chore: update AGENTS.md for docs workflow`
+  - Avoid bracketed scopes in commit messages because they can interfere with Release Please parsing.
+
+## Architecture
+
+- `src/cli.ts` is the npm binary entrypoint and defines the Commander CLI.
+- `src/commands/update.ts` and `src/commands/install.ts` are thin command adapters over the shared runner.
+- `src/commands/run.ts` owns the main workflow: validate options, discover dependencies, fetch registry metadata, select mature versions, report decisions, inject temporary overrides, delegate to pnpm, and restore state.
+- `src/package-json/read.ts` reads `package.json`, detects indentation, and classifies supported versus unsupported dependency specs.
+- `src/registry/npm.ts` fetches npm packuments and converts them into sorted version metadata.
+- `src/maturity/filter.ts` applies semver compatibility plus minimum-age selection logic.
+- `src/pnpm/overrides.ts` is the only code that mutates `package.json`; it creates and restores `.pnpm-mature.package.json.bak` during override injection.
+- `src/pnpm/runner.ts` delegates execution to the real `pnpm` process and preserves exit codes.
+- `src/utils/concurrency.ts` contains the bounded-concurrency helper for registry fetches.
+- `src/types/` contains shared manifest, registry, and command option types.
+- `test/` contains Vitest unit coverage for pure logic. Prefer testing maturity selection and manifest handling directly before adding broader integration coverage.
+- `docs/` contains the VitePress site. Keep navigation, landing page, and reference pages aligned with the actual CLI surface.
+- `workbench/` is reserved for gitignored manual test fixtures and disposable local repro projects. Do not make CI, docs, or release workflows depend on its contents.
+
+## Safety Rules
+
+- Keep `AGENTS.md` up to date after changes to tooling, commands, release automation, docs workflow, or architecture.
+- Keep `docs/` up to date when adding, removing, or changing CLI commands or product behavior. New command flags or behavior changes must be reflected in the docs reference pages.
+- Do not replace pnpm's resolver logic. pnpm-mature computes version ceilings only; resolution, peer dependency handling, lockfile generation, deduplication, and overrides semantics remain pnpm's job.
+- Do not permanently modify user `package.json` state. Any temporary `pnpm.overrides` injection must restore the original file even on failure when possible.
+- Treat `.pnpm-mature.package.json.bak` as crash-recovery state. Do not commit it, rename it casually, or leave it behind after successful runs.
+- Keep the implementation cross-platform. Avoid shell-specific behavior and prefer Node/Bun APIs or cross-platform child-process usage.
+- Unsupported dependency specs such as `git:`, `file:`, `link:`, `workspace:`, `catalog:`, and URL-based dependencies must remain explicitly skipped unless support is intentionally added.
+- `--include-transitive` is reserved for future work and should not silently start doing partial work without explicit design and tests.
+- Keep generated `dist/` files out of source edits unless intentionally rebuilding package output.
+- Use Oxfmt for formatting; do not introduce Prettier unless there is a specific gap that Oxfmt cannot cover.
+- Keep `workbench/` gitignored and local-only. It is a convenience area for manual testing and should not become part of the published package or documented product surface.
+
+## Product Defaults
+
+- The MVP supports `update` and `install` commands only.
+- The maturity threshold is expressed in days via `--age <days>` and must be a positive integer.
+- When `--use-pnpm-global-config` is provided and `--age` is omitted, the CLI reads `minimumReleaseAge` from pnpm global config in minutes and uses that value directly.
+- `--ignore-pinned minor` widens exact pinned versions to newer mature releases within the same major; `--ignore-pinned major` and `--ignore-pinned all` allow newer mature major versions as well. A bare `-p`/`--ignore-pinned` defaults to `all`.
+- Short aliases are supported for the current flags: `-a` for `--age`, `-g` for `--use-pnpm-global-config`, `-p` for `--ignore-pinned`, `-d` for `--dry-run`, and `-t` for `--include-transitive`.
+- The current implementation only considers direct dependencies from:
+  - `dependencies`
+  - `devDependencies`
+  - `optionalDependencies`
+  - `peerDependencies`
+- Dry-run mode prints declared ranges, latest versions, selected mature versions, skipped recent versions, and generated overrides without running pnpm.
+- If any supported dependency has no compatible version older than the configured threshold, the command exits non-zero instead of performing a partial constrained run.
+- Temporary constraints are injected through `pnpm.overrides` in `package.json` for the duration of the command.
+- Workspaces, monorepos, and transitive dependency constraints are planned but not yet implemented.
+
+## Formatting
+
+- Keep the codebase in existing TypeScript + ESM style.
+- Prefer small, focused patches over broad refactors.
+- Do not add extra formatting tooling unless there is a clear project decision to do so.
