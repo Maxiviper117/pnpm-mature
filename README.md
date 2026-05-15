@@ -1,6 +1,15 @@
 # pnpm-mature
 
+![pnpm-mature banner](assets/readme-banner.png)
+
+[![npm version](https://img.shields.io/npm/v/@maxiviper117/pnpm-mature?logo=npm&label=npm)](https://www.npmjs.com/package/@maxiviper117/pnpm-mature)
+[![CI](https://img.shields.io/github/actions/workflow/status/Maxiviper117/pnpm-mature/ci.yml?branch=main&label=ci&logo=github)](https://github.com/Maxiviper117/pnpm-mature/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/github/actions/workflow/status/Maxiviper117/pnpm-mature/deploy-docs.yml?branch=main&label=docs&logo=github)](https://github.com/Maxiviper117/pnpm-mature/actions/workflows/deploy-docs.yml)
+[![License](https://img.shields.io/github/license/Maxiviper117/pnpm-mature?label=license)](./LICENSE)
+
 `pnpm-mature` is a lightweight CLI wrapper around pnpm that constrains dependency updates by package release age, while still delegating dependency resolution and lockfile generation to pnpm.
+
+Documentation: https://maxiviper117.github.io/pnpm-mature/
 
 ## Current MVP
 
@@ -81,6 +90,10 @@ vite
 	selected: 7.1.8 (2026-05-03)
 	skipped recent: 7.2.0
 ```
+
+## Docs
+
+Documentation is available at https://maxiviper117.github.io/pnpm-mature/
 
 ## Publishing
 
