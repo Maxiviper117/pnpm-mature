@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.2.0...pnpm-mature-v0.3.0) (2026-05-15)
+
+
+### Features
+
+* note single-package update behavior in README ([#4](https://github.com/Maxiviper117/pnpm-mature/issues/4)) ([a9c081d](https://github.com/Maxiviper117/pnpm-mature/commit/a9c081dd0bd3ecc103267b797b3912eff0d9c7f3))
+
 ## [0.2.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.1.0...pnpm-mature-v0.2.0) (2026-05-15)
 
 
