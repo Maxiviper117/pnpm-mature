@@ -4,6 +4,7 @@ import { Command, InvalidArgumentError, Option } from "commander";
 
 import { runInstallCommand } from "./commands/install";
 import { runUpdateCommand } from "./commands/update";
+import { normalizeDependencyNames } from "./package-name/normalize";
 import type { CommandOptions } from "./types";
 
 const program = new Command();
@@ -16,18 +17,22 @@ program
 for (const definition of [
   {
     name: "update",
-    description: "Update dependencies using maturity-aware temporary pnpm overrides.",
+    description: "Update dependencies by writing maturity-aware versions into package.json.",
     runner: runUpdateCommand,
   },
   {
     name: "install",
-    description: "Install dependencies using maturity-aware temporary pnpm overrides.",
+    description: "Install dependencies after writing maturity-aware versions into package.json.",
     runner: runInstallCommand,
   },
 ] as const) {
   program
     .command(definition.name)
     .description(definition.description)
+    .argument(
+      "[packages...]",
+      "Only process the specified direct dependencies instead of the full manifest.",
+    )
     .option(
       "-a, --age <days>",
       "Only allow versions published more than this many days ago.",
@@ -46,15 +51,19 @@ for (const definition of [
         .preset("all")
         .argParser(parseIgnorePinnedLevel),
     )
-    .option("-d, --dry-run", "Print selected versions and overrides without running pnpm.")
+    .option(
+      "-d, --dry-run",
+      "Print selected versions and package.json updates without running pnpm.",
+    )
     .option(
       "-t, --include-transitive",
       "Reserved for a future release. Currently unsupported.",
       false,
     )
-    .action(async (commandFlags) => {
+    .action(async (packages: string[], commandFlags) => {
       const options: CommandOptions = {
         age: commandFlags.age,
+        dependencyNames: normalizeDependencyNames(packages),
         dryRun: Boolean(commandFlags.dryRun),
         ignorePinned: commandFlags.ignorePinned,
         includeTransitive: Boolean(commandFlags.includeTransitive),

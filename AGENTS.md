@@ -2,7 +2,7 @@
 
 ## Project
 
-pnpm-mature is a lightweight TypeScript CLI that wraps pnpm with maturity-aware dependency selection. It inspects npm registry publish dates, chooses the newest semver-compatible version older than a configured age threshold, injects temporary `pnpm.overrides`, and then delegates resolution back to pnpm. The npm package is `@maxiviper117/pnpm-mature`; the CLI binary is `pnpm-mature`.
+pnpm-mature is a lightweight TypeScript CLI that wraps pnpm with maturity-aware dependency selection. It inspects npm registry publish dates, chooses the newest semver-compatible version older than a configured age threshold, rewrites the targeted direct dependency versions in `package.json`, and then delegates resolution back to pnpm. The npm package is `@maxiviper117/pnpm-mature`; the CLI binary is `pnpm-mature`.
 
 Keep this file up to date whenever project workflow, release automation, docs structure, or architectural boundaries change.
 
@@ -79,10 +79,11 @@ npm pack --dry-run
 - Release workflow lives in `.github/workflows/release-please.yml`.
 - Docs deployment workflow lives in `.github/workflows/deploy-docs.yml`.
 - Release Please is manifest-driven for the root Node package and uses the fixed component/tag format `pnpm-mature-v<version>`.
+- Release publishes run to completion for a given ref; do not reintroduce `cancel-in-progress` on the release workflow unless the publish flow changes.
 - `bump-minor-pre-major: true` keeps breaking changes below `1.0.0` until an intentional stable release is requested.
 - Release Please creates release PRs and GitHub releases. npm publishing runs automatically in CI after a Release Please release is created on `main`.
 - The workflow may use an optional `RELEASE_PLEASE_TOKEN` secret; otherwise it falls back to `GITHUB_TOKEN`.
-- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC. Keep `id-token: write` intact unless the publishing model changes.
+- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC and publishes with `npm publish --access public --provenance`. Keep `id-token: write` intact unless the publishing model changes.
 - When ready for the first stable release, use a commit footer like `Release-As: 1.0.0`.
 - Keep commits Conventional Commits-compatible so Release Please can infer versions. Examples:
   - `feat: add maturity-aware install command`
@@ -95,11 +96,12 @@ npm pack --dry-run
 
 - `src/cli.ts` is the npm binary entrypoint and defines the Commander CLI.
 - `src/commands/update.ts` and `src/commands/install.ts` are thin command adapters over the shared runner.
-- `src/commands/run.ts` owns the main workflow: validate options, discover dependencies, fetch registry metadata, select mature versions, report decisions, inject temporary overrides, delegate to pnpm, and restore state.
+- `src/commands/run.ts` owns the main workflow: validate options, discover dependencies, fetch registry metadata, select mature versions, report decisions, rewrite direct dependency versions in `package.json`, delegate to pnpm, and roll back on failed runs.
+- `src/package-name/normalize.ts` validates and deduplicates CLI-targeted package names before command execution.
 - `src/package-json/read.ts` reads `package.json`, detects indentation, and classifies supported versus unsupported dependency specs.
 - `src/registry/npm.ts` fetches npm packuments and converts them into sorted version metadata.
 - `src/maturity/filter.ts` applies semver compatibility plus minimum-age selection logic.
-- `src/pnpm/overrides.ts` is the only code that mutates `package.json`; it creates and restores `.pnpm-mature.package.json.bak` during override injection.
+- `src/pnpm/overrides.ts` is the only code that mutates `package.json`; it creates `.pnpm-mature.package.json.bak`, writes selected direct dependency versions into the manifest, and either commits or rolls back those changes.
 - `src/pnpm/runner.ts` delegates execution to the real `pnpm` process and preserves exit codes.
 - `src/utils/concurrency.ts` contains the bounded-concurrency helper for registry fetches.
 - `src/types/` contains shared manifest, registry, and command option types.
@@ -111,8 +113,8 @@ npm pack --dry-run
 
 - Keep `AGENTS.md` up to date after changes to tooling, commands, release automation, docs workflow, or architecture.
 - Keep `docs/` up to date when adding, removing, or changing CLI commands or product behavior. New command flags or behavior changes must be reflected in the docs reference pages.
-- Do not replace pnpm's resolver logic. pnpm-mature computes version ceilings only; resolution, peer dependency handling, lockfile generation, deduplication, and overrides semantics remain pnpm's job.
-- Do not permanently modify user `package.json` state. Any temporary `pnpm.overrides` injection must restore the original file even on failure when possible.
+- Do not replace pnpm's resolver logic. pnpm-mature computes direct dependency target versions only; resolution, peer dependency handling, lockfile generation, and deduplication remain pnpm's job.
+- Successful runs intentionally persist the selected direct dependency versions to `package.json`. Failed or interrupted runs should restore the original file when possible.
 - Treat `.pnpm-mature.package.json.bak` as crash-recovery state. Do not commit it, rename it casually, or leave it behind after successful runs.
 - Keep the implementation cross-platform. Avoid shell-specific behavior and prefer Node/Bun APIs or cross-platform child-process usage.
 - Unsupported dependency specs such as `git:`, `file:`, `link:`, `workspace:`, `catalog:`, and URL-based dependencies must remain explicitly skipped unless support is intentionally added.
@@ -120,10 +122,12 @@ npm pack --dry-run
 - Keep generated `dist/` files out of source edits unless intentionally rebuilding package output.
 - Use Oxfmt for formatting; do not introduce Prettier unless there is a specific gap that Oxfmt cannot cover.
 - Keep `workbench/` gitignored and local-only. It is a convenience area for manual testing and should not become part of the published package or documented product surface.
+- Keep CI installs lockfile-strict with `bun install --frozen-lockfile` unless the package manager strategy changes.
 
 ## Product Defaults
 
 - The MVP supports `update` and `install` commands only.
+- Both commands accept optional direct dependency names after the command name, for example `pnpm-mature update react --age 7`. Every requested package must already exist in `package.json` with a supported spec.
 - The maturity threshold is expressed in days via `--age <days>` and must be a positive integer.
 - When `--use-pnpm-global-config` is provided and `--age` is omitted, the CLI reads `minimumReleaseAge` from pnpm global config in minutes and uses that value directly.
 - `--ignore-pinned minor` widens exact pinned versions to newer mature releases within the same major; `--ignore-pinned major` and `--ignore-pinned all` allow newer mature major versions as well. A bare `-p`/`--ignore-pinned` defaults to `all`.
@@ -133,9 +137,9 @@ npm pack --dry-run
   - `devDependencies`
   - `optionalDependencies`
   - `peerDependencies`
-- Dry-run mode prints declared ranges, latest versions, selected mature versions, skipped recent versions, and generated overrides without running pnpm.
+- Dry-run mode prints declared ranges, latest versions, selected mature versions, skipped recent versions, and the `package.json` updates that would be written without running pnpm.
 - If any supported dependency has no compatible version older than the configured threshold, the command exits non-zero instead of performing a partial constrained run.
-- Temporary constraints are injected through `pnpm.overrides` in `package.json` for the duration of the command.
+- Successful commands rewrite the selected direct dependency entries in `package.json` before delegating to pnpm.
 - Workspaces, monorepos, and transitive dependency constraints are planned but not yet implemented.
 
 ## Formatting

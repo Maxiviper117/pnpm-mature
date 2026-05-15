@@ -37,3 +37,4 @@ docs/.vitepress/dist/*
 
 # local manual test fixtures
 workbench/
+SECURITY-AUDIT.md

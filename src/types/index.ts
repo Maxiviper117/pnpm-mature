@@ -53,6 +53,7 @@ export interface DependencySelection {
 
 export interface CommandOptions {
   age?: number;
+  dependencyNames?: string[];
   dryRun: boolean;
   ignorePinned?: "all" | "major" | "minor";
   includeTransitive: boolean;
