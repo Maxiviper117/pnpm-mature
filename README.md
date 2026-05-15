@@ -24,7 +24,7 @@ Version `0.1.0` supports:
 	- `major` and `all` allow mature updates across major versions
 	- passing `-p` with no value defaults to `all`
 - `-d, --dry-run`
-- optional direct dependency targeting by package name, for example `pnpm-mature update react -a 7`
+- optional direct dependency targeting by package name, for example `pnpm-mature update react -a 7`, which rewrites only the `react` entry in `package.json`
 - direct dependency discovery from `dependencies`, `devDependencies`, `optionalDependencies`, and `peerDependencies`
 - semver-compatible version selection using npm registry metadata
 - package.json version rewrites that persist after successful runs
