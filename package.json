@@ -1,6 +1,6 @@
 {
   "name": "@maxiviper117/pnpm-mature",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Maturity-aware pnpm wrapper for age-constrained dependency updates.",
   "homepage": "https://github.com/Maxiviper117/pnpm-mature#readme",
   "bugs": {
