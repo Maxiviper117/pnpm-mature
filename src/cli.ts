@@ -51,7 +51,10 @@ for (const definition of [
         .preset("all")
         .argParser(parseIgnorePinnedLevel),
     )
-    .option("-d, --dry-run", "Print selected versions and package.json updates without running pnpm.")
+    .option(
+      "-d, --dry-run",
+      "Print selected versions and package.json updates without running pnpm.",
+    )
     .option(
       "-t, --include-transitive",
       "Reserved for a future release. Currently unsupported.",

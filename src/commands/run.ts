@@ -81,8 +81,14 @@ export async function runMatureCommand(
   let succeeded = false;
 
   try {
-    console.log(pc.bold(`\nWriting selected versions to package.json and running pnpm ${command}...`));
-    const exitCode = await runPnpmCommand(options.projectDir, command, options.dependencyNames ?? []);
+    console.log(
+      pc.bold(`\nWriting selected versions to package.json and running pnpm ${command}...`),
+    );
+    const exitCode = await runPnpmCommand(
+      options.projectDir,
+      command,
+      options.dependencyNames ?? [],
+    );
     succeeded = exitCode === 0;
     return exitCode;
   } finally {

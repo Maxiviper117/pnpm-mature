@@ -81,7 +81,11 @@ describe("applyPackageManifestUpdates", () => {
 async function createProjectDir(packageJson: object): Promise<string> {
   const projectDir = await mkdtemp(path.join(os.tmpdir(), "pnpm-mature-overrides-"));
   tempDirs.push(projectDir);
-  await writeFile(path.join(projectDir, "package.json"), `${JSON.stringify(packageJson, null, 2)}\n`, "utf8");
+  await writeFile(
+    path.join(projectDir, "package.json"),
+    `${JSON.stringify(packageJson, null, 2)}\n`,
+    "utf8",
+  );
   return projectDir;
 }
 
