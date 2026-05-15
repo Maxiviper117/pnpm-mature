@@ -28,6 +28,10 @@ for (const definition of [
   program
     .command(definition.name)
     .description(definition.description)
+    .argument(
+      "[packages...]",
+      "Only process the specified direct dependencies instead of the full manifest.",
+    )
     .option(
       "-a, --age <days>",
       "Only allow versions published more than this many days ago.",
@@ -52,9 +56,10 @@ for (const definition of [
       "Reserved for a future release. Currently unsupported.",
       false,
     )
-    .action(async (commandFlags) => {
+    .action(async (packages: string[], commandFlags) => {
       const options: CommandOptions = {
         age: commandFlags.age,
+        dependencyNames: normalizeDependencyNames(packages),
         dryRun: Boolean(commandFlags.dryRun),
         ignorePinned: commandFlags.ignorePinned,
         includeTransitive: Boolean(commandFlags.includeTransitive),
@@ -91,4 +96,12 @@ function parseIgnorePinnedLevel(value: string): "all" | "major" | "minor" {
   }
 
   throw new InvalidArgumentError("must be one of all, major, or minor");
+}
+
+function normalizeDependencyNames(packages: string[]): string[] | undefined {
+  if (packages.length === 0) {
+    return undefined;
+  }
+
+  return [...new Set(packages)];
 }

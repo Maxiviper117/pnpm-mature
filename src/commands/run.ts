@@ -23,8 +23,13 @@ export async function runMatureCommand(
 
   const manifestState = await readPackageManifest(options.projectDir);
   const { supported, unsupported } = collectDirectDependencies(manifestState.manifest);
+  const requestedDependencies = resolveRequestedDependencies(
+    supported,
+    unsupported,
+    options.dependencyNames,
+  );
 
-  if (supported.length === 0) {
+  if (requestedDependencies.length === 0) {
     console.log(pc.yellow("No supported direct dependencies found in package.json."));
     reportUnsupported(unsupported);
     return 0;
@@ -32,11 +37,11 @@ export async function runMatureCommand(
 
   console.log(
     pc.cyan(
-      `Inspecting ${supported.length} direct dependencies in ${path.basename(options.projectDir)}...`,
+      `Inspecting ${requestedDependencies.length} direct dependencies in ${path.basename(options.projectDir)}...`,
     ),
   );
 
-  const registryResults = await mapWithConcurrency(supported, 8, async (dependency) => {
+  const registryResults = await mapWithConcurrency(requestedDependencies, 8, async (dependency) => {
     const registryMeta = await fetchRegistryPackageMeta(dependency.name);
     return selectMatureVersion(dependency, registryMeta, minimumAgeMinutes, options.ignorePinned);
   });
@@ -70,12 +75,63 @@ export async function runMatureCommand(
 
   try {
     console.log(pc.bold(`\nRunning pnpm ${command} with temporary maturity overrides...`));
-    return await runPnpmCommand(options.projectDir, command);
+    return await runPnpmCommand(options.projectDir, command, options.dependencyNames ?? []);
   } finally {
     cleanupHandlers.dispose();
     await restore();
   }
 }
+
+function resolveRequestedDependencies(
+  supported: CommandDependency[],
+  unsupported: Array<{ name: string; spec: string; reason: string }>,
+  dependencyNames: string[] | undefined,
+): CommandDependency[] {
+  if (!dependencyNames || dependencyNames.length === 0) {
+    return supported;
+  }
+
+  const supportedByName = new Map(supported.map((dependency) => [dependency.name, dependency]));
+  const unsupportedByName = new Map(unsupported.map((dependency) => [dependency.name, dependency]));
+  const requested: CommandDependency[] = [];
+  const missing: string[] = [];
+  const invalid: string[] = [];
+
+  for (const name of dependencyNames) {
+    const supportedDependency = supportedByName.get(name);
+
+    if (supportedDependency) {
+      requested.push(supportedDependency);
+      continue;
+    }
+
+    const unsupportedDependency = unsupportedByName.get(name);
+
+    if (unsupportedDependency) {
+      invalid.push(
+        `${unsupportedDependency.name}@${unsupportedDependency.spec} (${unsupportedDependency.reason})`,
+      );
+      continue;
+    }
+
+    missing.push(name);
+  }
+
+  if (invalid.length > 0 || missing.length > 0) {
+    const details = [
+      invalid.length > 0 ? `unsupported: ${invalid.join(", ")}` : undefined,
+      missing.length > 0 ? `not found: ${missing.join(", ")}` : undefined,
+    ]
+      .filter((value) => value)
+      .join("; ");
+
+    throw new Error(`Unable to target the requested dependencies: ${details}`);
+  }
+
+  return requested;
+}
+
+type CommandDependency = DependencySelection["dependency"];
 
 function validateOptions(options: CommandOptions, minimumAgeMinutes: number): void {
   if (!Number.isInteger(minimumAgeMinutes) || minimumAgeMinutes <= 0) {

@@ -124,6 +124,7 @@ npm pack --dry-run
 ## Product Defaults
 
 - The MVP supports `update` and `install` commands only.
+- Both commands accept optional direct dependency names after the command name, for example `pnpm-mature update react --age 7`. Every requested package must already exist in `package.json` with a supported spec.
 - The maturity threshold is expressed in days via `--age <days>` and must be a positive integer.
 - When `--use-pnpm-global-config` is provided and `--age` is omitted, the CLI reads `minimumReleaseAge` from pnpm global config in minutes and uses that value directly.
 - `--ignore-pinned minor` widens exact pinned versions to newer mature releases within the same major; `--ignore-pinned major` and `--ignore-pinned all` allow newer mature major versions as well. A bare `-p`/`--ignore-pinned` defaults to `all`.
