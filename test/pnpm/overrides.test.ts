@@ -32,7 +32,9 @@ describe("applyPackageManifestUpdates", () => {
       dependencies: { express: "4.22.2" },
       devDependencies: { nodemon: "2.0.23" },
     });
-    await expect(access(path.join(projectDir, ".pnpm-mature.package.json.bak"))).rejects.toThrow();
+    await expect(access(path.join(projectDir, ".pnpm-mature.package.json.bak"))).rejects.toThrow(
+      /ENOENT/,
+    );
   });
 
   it("restores the original package.json on rollback", async () => {
@@ -51,7 +53,9 @@ describe("applyPackageManifestUpdates", () => {
     await expect(readProjectPackageJson(projectDir)).resolves.toMatchObject({
       dependencies: { express: "4.18.2" },
     });
-    await expect(access(path.join(projectDir, ".pnpm-mature.package.json.bak"))).rejects.toThrow();
+    await expect(access(path.join(projectDir, ".pnpm-mature.package.json.bak"))).rejects.toThrow(
+      /ENOENT/,
+    );
   });
 
   it("strips existing pnpm.overrides from the rewritten manifest", async () => {
