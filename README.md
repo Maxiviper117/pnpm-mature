@@ -7,7 +7,7 @@
 [![Docs](https://img.shields.io/github/actions/workflow/status/Maxiviper117/pnpm-mature/deploy-docs.yml?branch=main&label=docs&logo=github)](https://github.com/Maxiviper117/pnpm-mature/actions/workflows/deploy-docs.yml)
 [![License](https://img.shields.io/github/license/Maxiviper117/pnpm-mature?label=license)](./LICENSE)
 
-`pnpm-mature` is a lightweight CLI wrapper around pnpm that constrains dependency updates by package release age, while still delegating dependency resolution and lockfile generation to pnpm.
+`pnpm-mature` is a lightweight CLI wrapper around pnpm that constrains dependency updates by package release age, writes the selected direct dependency versions into `package.json`, and then delegates dependency resolution and lockfile generation to pnpm.
 
 Documentation: https://maxiviper117.github.io/pnpm-mature/
 
@@ -27,7 +27,7 @@ Version `0.1.0` supports:
 - optional direct dependency targeting by package name, for example `pnpm-mature update react -a 7`
 - direct dependency discovery from `dependencies`, `devDependencies`, `optionalDependencies`, and `peerDependencies`
 - semver-compatible version selection using npm registry metadata
-- temporary `pnpm.overrides` injection with automatic restoration
+- package.json version rewrites that persist after successful runs
 
 Not yet supported:
 

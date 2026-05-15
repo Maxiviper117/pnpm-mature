@@ -17,12 +17,12 @@ program
 for (const definition of [
   {
     name: "update",
-    description: "Update dependencies using maturity-aware temporary pnpm overrides.",
+    description: "Update dependencies by writing maturity-aware versions into package.json.",
     runner: runUpdateCommand,
   },
   {
     name: "install",
-    description: "Install dependencies using maturity-aware temporary pnpm overrides.",
+    description: "Install dependencies after writing maturity-aware versions into package.json.",
     runner: runInstallCommand,
   },
 ] as const) {
@@ -51,7 +51,7 @@ for (const definition of [
         .preset("all")
         .argParser(parseIgnorePinnedLevel),
     )
-    .option("-d, --dry-run", "Print selected versions and overrides without running pnpm.")
+    .option("-d, --dry-run", "Print selected versions and package.json updates without running pnpm.")
     .option(
       "-t, --include-transitive",
       "Reserved for a future release. Currently unsupported.",

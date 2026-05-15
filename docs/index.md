@@ -18,8 +18,8 @@ features:
     details: pnpm-mature does not replace pnpm's resolver, lockfile generation, or peer dependency handling.
   - title: Age-aware updates
     details: Select the newest semver-compatible version older than your configured age threshold.
-  - title: Safe temporary overrides
-    details: Inject temporary pnpm overrides for the run, then restore your package.json afterward.
+  - title: Persistent manifest updates
+    details: Write the selected direct dependency versions into package.json, then let pnpm resolve and lock them.
   - title: Dry-run first
     details: Inspect selected versions, skipped recent releases, and generated constraints before changing anything.
 ---

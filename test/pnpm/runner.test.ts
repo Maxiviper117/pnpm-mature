@@ -8,32 +8,30 @@ type SpawnMock = (
   once: (event: string, handler: (...args: unknown[]) => void) => void;
 };
 
-const { spawnMock } = vi.hoisted(() => ({
-  spawnMock: vi.fn<SpawnMock>(),
-}));
-
-vi.mock("node:child_process", () => ({
-  spawn: spawnMock,
-}));
-
-import { runPnpmCommand } from "../../src/pnpm/runner";
+let spawnMock: ReturnType<typeof vi.fn<SpawnMock>>;
 
 describe("runPnpmCommand", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetModules();
+    spawnMock = vi.fn<SpawnMock>();
     spawnMock.mockReturnValue(createChildProcessDouble());
+    vi.doMock("node:child_process", () => ({
+      spawn: spawnMock,
+    }));
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.resetModules();
   });
 
   it("uses direct pnpm execution without a shell on Windows", async () => {
     vi.spyOn(process, "platform", "get").mockReturnValue("win32");
+    const { runPnpmCommand } = await import("../../src/pnpm/runner");
 
     await expect(runPnpmCommand("D:/tmp/project", "update", ["react"])).resolves.toBe(0);
 
-    expect(spawnMock).toHaveBeenCalledWith("pnpm.cmd", ["update", "react"], {
+    expect(spawnMock).toHaveBeenCalledWith("pnpm", ["update", "react"], {
       cwd: "D:/tmp/project",
       shell: false,
       stdio: "inherit",

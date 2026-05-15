@@ -5,7 +5,7 @@ export async function runPnpmCommand(
   command: "update" | "install",
   args: string[] = [],
 ): Promise<number> {
-  const executable = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+  const executable = "pnpm";
 
   return await new Promise<number>((resolve, reject) => {
     const child = spawn(executable, [command, ...args], {

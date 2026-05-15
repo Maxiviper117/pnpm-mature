@@ -8,8 +8,8 @@ type FormatMinimumAgeShortLabel =
   (typeof import("../../src/pnpm/config"))["formatMinimumAgeShortLabel"];
 type ResolveMinimumAgeMinutes =
   (typeof import("../../src/pnpm/config"))["resolveMinimumAgeMinutes"];
-type ApplyTemporaryOverrides =
-  (typeof import("../../src/pnpm/overrides"))["applyTemporaryOverrides"];
+type ApplyPackageManifestUpdates =
+  (typeof import("../../src/pnpm/overrides"))["applyPackageManifestUpdates"];
 type RecoverPackageJsonIfNeeded =
   (typeof import("../../src/pnpm/overrides"))["recoverPackageJsonIfNeeded"];
 type RunPnpmCommand = (typeof import("../../src/pnpm/runner"))["runPnpmCommand"];
@@ -31,7 +31,7 @@ vi.mock("../../src/pnpm/config", () => ({
 }));
 
 vi.mock("../../src/pnpm/overrides", () => ({
-  applyTemporaryOverrides: vi.fn<ApplyTemporaryOverrides>(),
+  applyPackageManifestUpdates: vi.fn<ApplyPackageManifestUpdates>(),
   recoverPackageJsonIfNeeded: vi.fn<RecoverPackageJsonIfNeeded>(),
 }));
 
@@ -47,7 +47,7 @@ import { runMatureCommand } from "../../src/commands/run";
 import { selectMatureVersion } from "../../src/maturity/filter";
 import { collectDirectDependencies, readPackageManifest } from "../../src/package-json/read";
 import { resolveMinimumAgeMinutes } from "../../src/pnpm/config";
-import { applyTemporaryOverrides, recoverPackageJsonIfNeeded } from "../../src/pnpm/overrides";
+import { applyPackageManifestUpdates, recoverPackageJsonIfNeeded } from "../../src/pnpm/overrides";
 import { runPnpmCommand } from "../../src/pnpm/runner";
 import { fetchRegistryPackageMeta } from "../../src/registry/npm";
 import type { CommandOptions, DependencySelection, RegistryPackageMeta } from "../../src/types";
@@ -97,11 +97,14 @@ describe("runMatureCommand", () => {
     asMock(selectMatureVersion).mockImplementation((dependency) =>
       createSelection(dependency.name, dependency.spec),
     );
-    asMock(applyTemporaryOverrides).mockResolvedValue(async () => {});
+    asMock(applyPackageManifestUpdates).mockResolvedValue({
+      commit: async () => {},
+      rollback: async () => {},
+    });
     asMock(runPnpmCommand).mockResolvedValue(0);
   });
 
-  it("limits override generation and pnpm arguments to the requested dependency", async () => {
+  it("limits package.json updates and pnpm arguments to the requested dependency", async () => {
     await expect(
       runMatureCommand("update", { ...baseOptions, dependencyNames: ["react"] }),
     ).resolves.toBe(0);
@@ -109,9 +112,9 @@ describe("runMatureCommand", () => {
     expect(fetchRegistryPackageMeta).toHaveBeenCalledTimes(1);
     expect(fetchRegistryPackageMeta).toHaveBeenCalledWith("react");
     expect(selectMatureVersion).toHaveBeenCalledTimes(1);
-    expect(applyTemporaryOverrides).toHaveBeenCalledWith(baseOptions.projectDir, {
-      react: "18.3.1",
-    });
+    expect(applyPackageManifestUpdates).toHaveBeenCalledWith(baseOptions.projectDir, [
+      { field: "dependencies", name: "react", version: "18.3.1" },
+    ]);
     expect(runPnpmCommand).toHaveBeenCalledWith(baseOptions.projectDir, "update", ["react"]);
   });
 
@@ -135,7 +138,7 @@ describe("runMatureCommand", () => {
     const removeListener = vi.spyOn(process, "removeListener");
     const processKill = vi.spyOn(process, "kill").mockImplementation(() => true);
     let restored = false;
-    const restore = vi.fn<() => Promise<void>>(async () => {
+    const rollback = vi.fn<() => Promise<void>>(async () => {
       if (restored) {
         return;
       }
@@ -151,7 +154,10 @@ describe("runMatureCommand", () => {
       return process;
     }) as typeof process.once);
 
-    asMock(applyTemporaryOverrides).mockResolvedValue(restore);
+    asMock(applyPackageManifestUpdates).mockResolvedValue({
+      commit: async () => {},
+      rollback,
+    });
     asMock(runPnpmCommand).mockImplementation(async () => {
       sigintHandler?.("SIGINT");
       return 130;
@@ -161,7 +167,7 @@ describe("runMatureCommand", () => {
       runMatureCommand("update", { ...baseOptions, dependencyNames: ["react"] }),
     ).resolves.toBe(130);
 
-    expect(restore).toHaveBeenCalledTimes(1);
+    expect(rollback).toHaveBeenCalledTimes(1);
     expect(processKill).toHaveBeenCalledWith(process.pid, "SIGINT");
     expect(removeListener).toHaveBeenCalledWith("SIGINT", expect.any(Function));
     const firstRemoveCall = removeListener.mock.invocationCallOrder[0];
@@ -174,6 +180,18 @@ describe("runMatureCommand", () => {
     processOnce.mockRestore();
     removeListener.mockRestore();
     processKill.mockRestore();
+  });
+
+  it("commits manifest updates after a successful pnpm run", async () => {
+    const commit = vi.fn<() => Promise<void>>(async () => {});
+    const rollback = vi.fn<() => Promise<void>>(async () => {});
+
+    asMock(applyPackageManifestUpdates).mockResolvedValue({ commit, rollback });
+
+    await expect(runMatureCommand("update", { ...baseOptions })).resolves.toBe(0);
+
+    expect(commit).toHaveBeenCalledTimes(1);
+    expect(rollback).not.toHaveBeenCalled();
   });
 });
 

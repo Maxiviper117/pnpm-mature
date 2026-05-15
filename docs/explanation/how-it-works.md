@@ -7,8 +7,8 @@ The high-level flow is:
 1. Read direct dependency ranges from `package.json`.
 2. Fetch package metadata from the npm registry.
 3. Filter versions by semver compatibility and minimum release age.
-4. Generate temporary `pnpm.overrides` entries.
+4. Rewrite the targeted direct dependency versions in `package.json`.
 5. Run `pnpm update` or `pnpm install`.
-6. Restore the original `package.json` after completion.
+6. Keep the rewritten `package.json` on success, or restore the original file if the run fails.
 
-That design keeps peer dependency handling, lockfile generation, deduplication, and overrides behavior inside pnpm where they belong.
+That design keeps peer dependency handling, lockfile generation, and deduplication inside pnpm while making the selected direct dependency versions explicit in `package.json`.

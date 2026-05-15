@@ -68,8 +68,7 @@ export function formatMinimumAgeLongLabel(minimumAgeMinutes: number): string {
 }
 
 async function readPnpmGlobalConfigValue(key: string): Promise<string | undefined> {
-  const isWindows = process.platform === "win32";
-  const executable = isWindows ? "pnpm.cmd" : "pnpm";
+  const executable = "pnpm";
   const args = ["config", "get", key, "--global"];
 
   return await new Promise<string | undefined>((resolve, reject) => {

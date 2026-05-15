@@ -5,7 +5,7 @@ import pc from "picocolors";
 import { selectMatureVersion } from "../maturity/filter";
 import { collectDirectDependencies } from "../package-json/read";
 import { formatMinimumAgeShortLabel, resolveMinimumAgeMinutes } from "../pnpm/config";
-import { applyTemporaryOverrides, recoverPackageJsonIfNeeded } from "../pnpm/overrides";
+import { applyPackageManifestUpdates, recoverPackageJsonIfNeeded } from "../pnpm/overrides";
 import { runPnpmCommand } from "../pnpm/runner";
 import { fetchRegistryPackageMeta } from "../registry/npm";
 import type { CommandOptions, DependencySelection } from "../types";
@@ -57,28 +57,42 @@ export async function runMatureCommand(
     return 1;
   }
 
-  const overrides = Object.fromEntries(
-    registryResults.map((result) => [result.dependency.name, result.selected!.version]),
+  const manifestUpdates = registryResults.map((result) => ({
+    field: result.dependency.field,
+    name: result.dependency.name,
+    version: result.selected!.version,
+  }));
+
+  const selectedVersions = Object.fromEntries(
+    manifestUpdates.map((update) => [update.name, update.version]),
   );
 
   if (options.dryRun) {
-    console.log(pc.bold("\nGenerated overrides:"));
-    for (const [name, version] of Object.entries(overrides)) {
+    console.log(pc.bold("\nGenerated package.json updates:"));
+    for (const [name, version] of Object.entries(selectedVersions)) {
       console.log(`  ${name}: ${version}`);
     }
 
     return 0;
   }
 
-  const restore = await applyTemporaryOverrides(options.projectDir, overrides);
-  const cleanupHandlers = installCleanupHandlers(restore);
+  const manifestMutation = await applyPackageManifestUpdates(options.projectDir, manifestUpdates);
+  const cleanupHandlers = installCleanupHandlers(manifestMutation.rollback);
+  let succeeded = false;
 
   try {
-    console.log(pc.bold(`\nRunning pnpm ${command} with temporary maturity overrides...`));
-    return await runPnpmCommand(options.projectDir, command, options.dependencyNames ?? []);
+    console.log(pc.bold(`\nWriting selected versions to package.json and running pnpm ${command}...`));
+    const exitCode = await runPnpmCommand(options.projectDir, command, options.dependencyNames ?? []);
+    succeeded = exitCode === 0;
+    return exitCode;
   } finally {
     cleanupHandlers.dispose();
-    await cleanupHandlers.cleanup();
+
+    if (succeeded) {
+      await manifestMutation.commit();
+    } else {
+      await cleanupHandlers.cleanup();
+    }
   }
 }
 
