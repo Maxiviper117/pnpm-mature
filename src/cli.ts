@@ -60,7 +60,16 @@ for (const definition of [
       "Reserved for a future release. Currently unsupported.",
       false,
     )
+    .option(
+      "--registry-max-response-mib <mib>",
+      "Override the maximum npm registry response size in MiB.",
+      parsePositiveInt,
+    )
+    .option("--max-registry-mib <mib>", "Alias for --registry-max-response-mib.", parsePositiveInt)
     .action(async (packages: string[], commandFlags) => {
+      const registryMaxResponseMiB =
+        commandFlags.registryMaxResponseMib ?? commandFlags.maxRegistryMib;
+
       const options: CommandOptions = {
         age: commandFlags.age,
         dependencyNames: normalizeDependencyNames(packages),
@@ -68,6 +77,7 @@ for (const definition of [
         ignorePinned: commandFlags.ignorePinned,
         includeTransitive: Boolean(commandFlags.includeTransitive),
         projectDir: process.cwd(),
+        registryMaxResponseMiB,
         usePnpmGlobalConfig: Boolean(commandFlags.usePnpmGlobalConfig),
       };
 

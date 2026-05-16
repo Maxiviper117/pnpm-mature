@@ -71,4 +71,39 @@ describe("fetchRegistryPackageMeta", () => {
       "npm registry returned an invalid packument payload",
     );
   });
+
+  it("identifies the package when the packument exceeds the safety limit", async () => {
+    const stream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new Uint8Array(101 * 1024 * 1024));
+        controller.close();
+      },
+    });
+
+    globalThis.fetch = vi
+      .fn<FetchMock>()
+      .mockResolvedValue(new Response(stream, { status: 200 })) as typeof fetch;
+
+    await expect(fetchRegistryPackageMeta("large-package")).rejects.toThrow(
+      "npm registry response for large-package exceeded the 100 MiB safety limit. To allow a larger response, rerun with --max-registry-mib <mib>.",
+    );
+  });
+
+  it("allows callers to raise the packument safety limit", async () => {
+    const payload = JSON.stringify({
+      name: "large-package",
+      time: { "1.0.0": "2026-04-20T00:00:00.000Z" },
+      versions: { "1.0.0": {} },
+    });
+
+    globalThis.fetch = vi
+      .fn<FetchMock>()
+      .mockResolvedValue(new Response(payload, { status: 200 })) as typeof fetch;
+
+    const result = await fetchRegistryPackageMeta("large-package", {
+      maxResponseMiB: 256,
+    });
+
+    expect(result.versions.map((entry) => entry.version)).toEqual(["1.0.0"]);
+  });
 });

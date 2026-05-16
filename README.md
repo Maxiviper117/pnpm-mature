@@ -11,6 +11,77 @@
 
 Documentation: https://maxiviper117.github.io/pnpm-mature/
 
+## Quickstart
+
+### 1. Install
+
+Install the CLI globally:
+
+```bash
+npm install -g @maxiviper117/pnpm-mature
+```
+
+`pnpm-mature` delegates the final install/update step to `pnpm`, so make sure `pnpm` is available in the project where you run it:
+
+```bash
+pnpm --version
+```
+
+### 2. Preview changes
+
+Run a dry run from a project that has a `package.json`:
+
+```bash
+pnpm-mature update --age 7 --dry-run
+```
+
+This inspects supported direct dependencies, fetches npm registry publish dates, and prints the versions that would be written to `package.json`. No files are changed in dry-run mode.
+
+To preview only one direct dependency, pass its package name:
+
+```bash
+pnpm-mature update react --age 7 --dry-run
+```
+
+### 3. Apply a maturity-aware update
+
+When the dry-run output looks right, run the command without `--dry-run`:
+
+```bash
+pnpm-mature update --age 7
+```
+
+The CLI writes the selected direct dependency versions into `package.json`, then runs `pnpm update`. Successful runs keep the updated versions in `package.json`; failed runs roll the manifest back when possible.
+
+### 4. Use install mode
+
+Use `install` when you want the same maturity-aware version selection before a normal `pnpm install`:
+
+```bash
+pnpm-mature install --age 7
+```
+
+### 5. Optional flags
+
+Read the maturity threshold from pnpm global config instead of passing `--age`:
+
+```bash
+pnpm-mature update --use-pnpm-global-config --dry-run
+```
+
+Widen exact pinned versions while still enforcing the maturity threshold:
+
+```bash
+pnpm-mature update --age 7 --ignore-pinned minor --dry-run
+pnpm-mature update --age 7 --ignore-pinned --dry-run
+```
+
+If a legitimate package has an unusually large npm registry response, raise the safety limit:
+
+```bash
+pnpm-mature update --age 7 --max-registry-mib 256 --dry-run
+```
+
 ## Current MVP
 
 Version `0.1.0` supports:
@@ -24,6 +95,7 @@ Version `0.1.0` supports:
 	- `major` and `all` allow mature updates across major versions
 	- passing `-p` with no value defaults to `all`
 - `-d, --dry-run`
+- `--max-registry-mib <mib>` or `--registry-max-response-mib <mib>` to raise the npm registry response safety limit if a legitimate package exceeds the default
 - optional direct dependency targeting by package name, for example `pnpm-mature update react -a 7`, which rewrites only the `react` entry in `package.json`
 - single-package targeting leaves the rest of `package.json` untouched while still letting pnpm update the selected dependency
 - direct dependency discovery from `dependencies`, `devDependencies`, `optionalDependencies`, and `peerDependencies`

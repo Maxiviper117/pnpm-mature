@@ -4,7 +4,12 @@ import type { RegistryPackageMeta, RegistryVersionMeta } from "../types";
 
 const REGISTRY_URL = "https://registry.npmjs.org";
 const REGISTRY_TIMEOUT_MS = 30_000;
-const MAX_PACKUMENT_BYTES = 5 * 1024 * 1024;
+const DEFAULT_MAX_PACKUMENT_MIB = 100;
+const BYTES_PER_MIB = 1024 * 1024;
+
+interface RegistryFetchOptions {
+  maxResponseMiB?: number;
+}
 
 interface RegistryPackument {
   name?: string;
@@ -15,7 +20,10 @@ interface RegistryPackument {
   };
 }
 
-export async function fetchRegistryPackageMeta(packageName: string): Promise<RegistryPackageMeta> {
+export async function fetchRegistryPackageMeta(
+  packageName: string,
+  options: RegistryFetchOptions = {},
+): Promise<RegistryPackageMeta> {
   const response = await fetch(`${REGISTRY_URL}/${encodeURIComponent(packageName)}`, {
     redirect: "error",
     signal: AbortSignal.timeout(REGISTRY_TIMEOUT_MS),
@@ -27,7 +35,8 @@ export async function fetchRegistryPackageMeta(packageName: string): Promise<Reg
     );
   }
 
-  const packument = await readPackument(response);
+  const maxResponseMiB = options.maxResponseMiB ?? DEFAULT_MAX_PACKUMENT_MIB;
+  const packument = await readPackument(packageName, response, maxResponseMiB);
   const versions = collectVersions(packument);
 
   return {
@@ -37,7 +46,11 @@ export async function fetchRegistryPackageMeta(packageName: string): Promise<Reg
   };
 }
 
-async function readPackument(response: Response): Promise<RegistryPackument> {
+async function readPackument(
+  packageName: string,
+  response: Response,
+  maxResponseMiB: number,
+): Promise<RegistryPackument> {
   const reader = response.body?.getReader();
 
   if (!reader) {
@@ -45,6 +58,7 @@ async function readPackument(response: Response): Promise<RegistryPackument> {
   }
 
   const chunks: Uint8Array[] = [];
+  const maxPackumentBytes = maxResponseMiB * BYTES_PER_MIB;
   let totalBytes = 0;
 
   while (true) {
@@ -58,8 +72,10 @@ async function readPackument(response: Response): Promise<RegistryPackument> {
 
     totalBytes += value.byteLength;
 
-    if (totalBytes > MAX_PACKUMENT_BYTES) {
-      throw new Error("npm registry response exceeded the 5 MiB safety limit");
+    if (totalBytes > maxPackumentBytes) {
+      throw new Error(
+        `npm registry response for ${packageName} exceeded the ${maxResponseMiB} MiB safety limit. To allow a larger response, rerun with --max-registry-mib <mib>.`,
+      );
     }
 
     chunks.push(value);

@@ -132,6 +132,7 @@ npm pack --dry-run
 - When `--use-pnpm-global-config` is provided and `--age` is omitted, the CLI reads `minimumReleaseAge` from pnpm global config in minutes and uses that value directly.
 - `--ignore-pinned minor` widens exact pinned versions to newer mature releases within the same major; `--ignore-pinned major` and `--ignore-pinned all` allow newer mature major versions as well. A bare `-p`/`--ignore-pinned` defaults to `all`.
 - Short aliases are supported for the current flags: `-a` for `--age`, `-g` for `--use-pnpm-global-config`, `-p` for `--ignore-pinned`, `-d` for `--dry-run`, and `-t` for `--include-transitive`.
+- `--max-registry-mib <mib>` and its longer alias `--registry-max-response-mib <mib>` override the default npm registry response safety limit of 100 MiB for legitimate large packuments.
 - The current implementation only considers direct dependencies from:
   - `dependencies`
   - `devDependencies`

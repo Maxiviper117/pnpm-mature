@@ -110,7 +110,9 @@ describe("runMatureCommand", () => {
     ).resolves.toBe(0);
 
     expect(fetchRegistryPackageMeta).toHaveBeenCalledTimes(1);
-    expect(fetchRegistryPackageMeta).toHaveBeenCalledWith("react");
+    expect(fetchRegistryPackageMeta).toHaveBeenCalledWith("react", {
+      maxResponseMiB: undefined,
+    });
     expect(selectMatureVersion).toHaveBeenCalledTimes(1);
     expect(applyPackageManifestUpdates).toHaveBeenCalledWith(baseOptions.projectDir, [
       { field: "dependencies", name: "react", version: "18.3.1" },
@@ -192,6 +194,31 @@ describe("runMatureCommand", () => {
 
     expect(commit).toHaveBeenCalledTimes(1);
     expect(rollback).not.toHaveBeenCalled();
+  });
+
+  it("passes registry response size overrides to metadata fetches", async () => {
+    await expect(
+      runMatureCommand("update", {
+        ...baseOptions,
+        dependencyNames: ["react"],
+        registryMaxResponseMiB: 256,
+      }),
+    ).resolves.toBe(0);
+
+    expect(fetchRegistryPackageMeta).toHaveBeenCalledWith("react", {
+      maxResponseMiB: 256,
+    });
+  });
+
+  it("rejects invalid registry response size overrides", async () => {
+    await expect(
+      runMatureCommand("update", {
+        ...baseOptions,
+        registryMaxResponseMiB: 0,
+      }),
+    ).rejects.toThrow("--registry-max-response-mib must be a positive integer");
+
+    expect(fetchRegistryPackageMeta).not.toHaveBeenCalled();
   });
 });
 
