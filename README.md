@@ -24,6 +24,7 @@ Version `0.1.0` supports:
 	- `major` and `all` allow mature updates across major versions
 	- passing `-p` with no value defaults to `all`
 - `-d, --dry-run`
+- `--registry-max-response-mib <mib>` to raise the npm registry response safety limit if a legitimate package exceeds the default
 - optional direct dependency targeting by package name, for example `pnpm-mature update react -a 7`, which rewrites only the `react` entry in `package.json`
 - single-package targeting leaves the rest of `package.json` untouched while still letting pnpm update the selected dependency
 - direct dependency discovery from `dependencies`, `devDependencies`, `optionalDependencies`, and `peerDependencies`

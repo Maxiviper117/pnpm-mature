@@ -42,7 +42,9 @@ export async function runMatureCommand(
   );
 
   const registryResults = await mapWithConcurrency(requestedDependencies, 8, async (dependency) => {
-    const registryMeta = await fetchRegistryPackageMeta(dependency.name);
+    const registryMeta = await fetchRegistryPackageMeta(dependency.name, {
+      maxResponseMiB: options.registryMaxResponseMiB,
+    });
     return selectMatureVersion(dependency, registryMeta, minimumAgeMinutes, options.ignorePinned);
   });
 
@@ -162,6 +164,13 @@ function validateOptions(options: CommandOptions, minimumAgeMinutes: number): vo
     throw new Error(
       "--include-transitive is reserved for a later release and is not supported in 0.1.0",
     );
+  }
+
+  if (
+    options.registryMaxResponseMiB !== undefined &&
+    (!Number.isInteger(options.registryMaxResponseMiB) || options.registryMaxResponseMiB <= 0)
+  ) {
+    throw new Error("--registry-max-response-mib must be a positive integer");
   }
 }
 

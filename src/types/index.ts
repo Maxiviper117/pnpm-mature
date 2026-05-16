@@ -58,5 +58,6 @@ export interface CommandOptions {
   ignorePinned?: "all" | "major" | "minor";
   includeTransitive: boolean;
   projectDir: string;
+  registryMaxResponseMiB?: number;
   usePnpmGlobalConfig: boolean;
 }
