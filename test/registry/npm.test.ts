@@ -85,7 +85,7 @@ describe("fetchRegistryPackageMeta", () => {
       .mockResolvedValue(new Response(stream, { status: 200 })) as typeof fetch;
 
     await expect(fetchRegistryPackageMeta("large-package")).rejects.toThrow(
-      "npm registry response for large-package exceeded the 100 MiB safety limit. To allow a larger response, rerun with --registry-max-response-mib <mib>.",
+      "npm registry response for large-package exceeded the 100 MiB safety limit. To allow a larger response, rerun with --max-registry-mib <mib>.",
     );
   });
 

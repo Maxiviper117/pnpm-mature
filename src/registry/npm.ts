@@ -74,7 +74,7 @@ async function readPackument(
 
     if (totalBytes > maxPackumentBytes) {
       throw new Error(
-        `npm registry response for ${packageName} exceeded the ${maxResponseMiB} MiB safety limit. To allow a larger response, rerun with --registry-max-response-mib <mib>.`,
+        `npm registry response for ${packageName} exceeded the ${maxResponseMiB} MiB safety limit. To allow a larger response, rerun with --max-registry-mib <mib>.`,
       );
     }
 
