@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.3.0...pnpm-mature-v0.4.0) (2026-05-16)
+
+
+### Features
+
+* allow registry response limit override ([#6](https://github.com/Maxiviper117/pnpm-mature/issues/6)) ([16aeda3](https://github.com/Maxiviper117/pnpm-mature/commit/16aeda3467ff8bbadf4724c9e93d82cfa8f3c178))
+
 ## [0.3.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.2.0...pnpm-mature-v0.3.0) (2026-05-15)
 
 
