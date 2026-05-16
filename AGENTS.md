@@ -131,7 +131,7 @@ npm pack --dry-run
 - The maturity threshold is expressed in days via `--age <days>` and must be a positive integer.
 - When `--use-pnpm-global-config` is provided and `--age` is omitted, the CLI reads `minimumReleaseAge` from pnpm global config in minutes and uses that value directly.
 - `--ignore-pinned minor` widens exact pinned versions to newer mature releases within the same major; `--ignore-pinned major` and `--ignore-pinned all` allow newer mature major versions as well. A bare `-p`/`--ignore-pinned` defaults to `all`.
-- Short aliases are supported for the current flags: `-a` for `--age`, `-g` for `--use-pnpm-global-config`, `-p` for `--ignore-pinned`, `-d` for `--dry-run`, and `-t` for `--include-transitive`.
+- Short aliases are supported for the current flags: `-a` for `--age`, `-g` for `--use-pnpm-global-config`, `-p` for `--ignore-pinned`, `-d` for `--dry-run`, `-y` for `--yes`, and `-t` for `--include-transitive`.
 - `--max-registry-mib <mib>` and its longer alias `--registry-max-response-mib <mib>` override the default npm registry response safety limit of 100 MiB for legitimate large packuments.
 - The current implementation only considers direct dependencies from:
   - `dependencies`
@@ -140,6 +140,7 @@ npm pack --dry-run
   - `peerDependencies`
 - Dry-run mode prints declared ranges, latest versions, selected mature versions, skipped recent versions, and the `package.json` updates that would be written without running pnpm.
 - If any supported dependency has no compatible version older than the configured threshold, the command exits non-zero instead of performing a partial constrained run.
+- Interactive `update` runs print generated `package.json` updates and require a `y` or `yes` confirmation before rewriting `package.json`; `--yes` and non-interactive update runs proceed without prompting so automation does not hang.
 - Successful commands rewrite the selected direct dependency entries in `package.json` before delegating to pnpm.
 - Workspaces, monorepos, and transitive dependency constraints are planned but not yet implemented.
 

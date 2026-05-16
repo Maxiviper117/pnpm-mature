@@ -25,6 +25,7 @@ describe("parseMinimumReleaseAgeMinutes", () => {
 
 describe("resolveMinimumAgeMinutes", () => {
   const baseOptions: CommandOptions = {
+    assumeYes: false,
     dryRun: false,
     includeTransitive: false,
     projectDir: "D:/tmp/project",

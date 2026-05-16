@@ -55,6 +55,7 @@ for (const definition of [
       "-d, --dry-run",
       "Print selected versions and package.json updates without running pnpm.",
     )
+    .option("-y, --yes", "Skip the update confirmation prompt.", false)
     .option(
       "-t, --include-transitive",
       "Reserved for a future release. Currently unsupported.",
@@ -72,6 +73,7 @@ for (const definition of [
 
       const options: CommandOptions = {
         age: commandFlags.age,
+        assumeYes: Boolean(commandFlags.yes),
         dependencyNames: normalizeDependencyNames(packages),
         dryRun: Boolean(commandFlags.dryRun),
         ignorePinned: commandFlags.ignorePinned,

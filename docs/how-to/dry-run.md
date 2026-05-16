@@ -15,6 +15,17 @@ The output shows:
 
 If no compatible version is old enough, the command exits non-zero so you can block unsafe updates in automation.
 
+## Preview pinned dependency updates
+
+Exact pinned dependencies stay pinned unless you opt into widening them. Use dry runs to inspect what would happen before applying the update:
+
+```bash
+pnpm-mature update --age 7 --dry-run --ignore-pinned minor
+pnpm-mature update --age 7 --dry-run --ignore-pinned
+```
+
+`--ignore-pinned minor` keeps exact pins within the current major. A bare `--ignore-pinned` defaults to `all`, which allows mature versions across majors.
+
 ## Large registry responses
 
 Dry runs still fetch npm registry metadata. If a package has a very large registry response, pnpm-mature stops at the configured safety limit and prints the package name.

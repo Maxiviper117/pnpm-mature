@@ -41,3 +41,17 @@ Target a single supported direct dependency when you do not want to inspect or u
 ```bash
 pnpm-mature update react --age 7
 ```
+
+## Exact pinned versions
+
+Exact pinned dependencies such as `1.2.3` stay pinned by default, so pnpm-mature only selects that exact version if it is old enough.
+
+Use `--ignore-pinned` when you want exact pins to move to newer mature releases:
+
+```bash
+pnpm-mature update --age 7 --ignore-pinned minor --dry-run
+pnpm-mature update --age 7 --ignore-pinned major --dry-run
+pnpm-mature update --age 7 --ignore-pinned --dry-run
+```
+
+`minor` allows newer mature versions within the same major. `major` and `all` allow newer mature major versions too. Passing `--ignore-pinned` without a value defaults to `all`.

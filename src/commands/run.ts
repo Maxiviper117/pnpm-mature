@@ -1,4 +1,5 @@
 import path from "node:path";
+import readline from "node:readline/promises";
 
 import pc from "picocolors";
 
@@ -70,12 +71,19 @@ export async function runMatureCommand(
   );
 
   if (options.dryRun) {
-    console.log(pc.bold("\nGenerated package.json updates:"));
-    for (const [name, version] of Object.entries(selectedVersions)) {
-      console.log(`  ${name}: ${version}`);
-    }
-
+    reportManifestUpdates(selectedVersions);
     return 0;
+  }
+
+  if (command === "update" && shouldConfirmUpdate(options)) {
+    reportManifestUpdates(selectedVersions);
+
+    const confirmed = await confirmUpdate(options);
+
+    if (!confirmed) {
+      console.log(pc.yellow("Update cancelled; package.json was not changed."));
+      return 0;
+    }
   }
 
   const manifestMutation = await applyPackageManifestUpdates(options.projectDir, manifestUpdates);
@@ -221,6 +229,42 @@ function formatVersionLine(version: { version: string; publishedAt: Date } | und
   }
 
   return `${version.version} (${version.publishedAt.toISOString().slice(0, 10)})`;
+}
+
+function reportManifestUpdates(selectedVersions: Record<string, string>): void {
+  console.log(pc.bold("\nGenerated package.json updates:"));
+
+  for (const [name, version] of Object.entries(selectedVersions)) {
+    console.log(`  ${name}: ${version}`);
+  }
+}
+
+function shouldConfirmUpdate(options: CommandOptions): boolean {
+  if (options.assumeYes) {
+    return false;
+  }
+
+  return Boolean(options.confirmUpdate || (process.stdin.isTTY && process.stdout.isTTY));
+}
+
+async function confirmUpdate(options: CommandOptions): Promise<boolean> {
+  if (options.confirmUpdate) {
+    return await options.confirmUpdate();
+  }
+
+  const prompt = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+  });
+
+  try {
+    const answer = await prompt.question(
+      pc.bold("\nApply these changes and run pnpm update? [y/N] "),
+    );
+    return answer.trim().toLowerCase() === "y" || answer.trim().toLowerCase() === "yes";
+  } finally {
+    prompt.close();
+  }
 }
 
 function installCleanupHandlers(restore: () => Promise<void>): {
