@@ -13,6 +13,19 @@ The high-level flow is:
 
 That design keeps peer dependency handling, lockfile generation, and deduplication inside pnpm while making the selected direct dependency versions explicit in `package.json`.
 
+## Exact pinned versions
+
+By default, exact pinned specs such as `1.2.3` remain exact. pnpm-mature will only select that same version, and it must still satisfy the configured maturity threshold.
+
+`--ignore-pinned` changes only exact pinned specs before selection:
+
+- `--ignore-pinned minor` treats an exact pin as compatible with newer mature versions in the same major.
+- `--ignore-pinned major` allows newer mature versions across majors.
+- `--ignore-pinned all` is equivalent to `major`.
+- `--ignore-pinned` with no value defaults to `all`.
+
+Existing semver ranges such as `^1.2.3` or `~1.2.3` keep their normal semver compatibility rules.
+
 ## Registry response limit
 
 `pnpm-mature` reads full npm registry packuments because publish timestamps are required for age-based selection. Those responses are streamed and capped to avoid unbounded memory use if a registry, proxy, or network response is unexpectedly large.

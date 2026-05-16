@@ -55,6 +55,7 @@ import type { CommandOptions, DependencySelection, RegistryPackageMeta } from ".
 describe("runMatureCommand", () => {
   const baseOptions: CommandOptions = {
     age: 7,
+    assumeYes: false,
     dryRun: false,
     includeTransitive: false,
     projectDir: "D:/tmp/project",
@@ -194,6 +195,48 @@ describe("runMatureCommand", () => {
 
     expect(commit).toHaveBeenCalledTimes(1);
     expect(rollback).not.toHaveBeenCalled();
+  });
+
+  it("cancels update before changing package.json when confirmation is rejected", async () => {
+    const confirmUpdate = vi.fn<() => Promise<boolean>>(async () => false);
+
+    await expect(runMatureCommand("update", { ...baseOptions, confirmUpdate })).resolves.toBe(0);
+
+    expect(confirmUpdate).toHaveBeenCalledTimes(1);
+    expect(applyPackageManifestUpdates).not.toHaveBeenCalled();
+    expect(runPnpmCommand).not.toHaveBeenCalled();
+  });
+
+  it("applies update when confirmation is accepted", async () => {
+    const confirmUpdate = vi.fn<() => Promise<boolean>>(async () => true);
+
+    await expect(runMatureCommand("update", { ...baseOptions, confirmUpdate })).resolves.toBe(0);
+
+    expect(confirmUpdate).toHaveBeenCalledTimes(1);
+    expect(applyPackageManifestUpdates).toHaveBeenCalledTimes(1);
+    expect(runPnpmCommand).toHaveBeenCalledWith(baseOptions.projectDir, "update", []);
+  });
+
+  it("skips update confirmation when assumeYes is enabled", async () => {
+    const confirmUpdate = vi.fn<() => Promise<boolean>>(async () => false);
+
+    await expect(
+      runMatureCommand("update", { ...baseOptions, assumeYes: true, confirmUpdate }),
+    ).resolves.toBe(0);
+
+    expect(confirmUpdate).not.toHaveBeenCalled();
+    expect(applyPackageManifestUpdates).toHaveBeenCalledTimes(1);
+    expect(runPnpmCommand).toHaveBeenCalledWith(baseOptions.projectDir, "update", []);
+  });
+
+  it("does not prompt before install", async () => {
+    const confirmUpdate = vi.fn<() => Promise<boolean>>(async () => false);
+
+    await expect(runMatureCommand("install", { ...baseOptions, confirmUpdate })).resolves.toBe(0);
+
+    expect(confirmUpdate).not.toHaveBeenCalled();
+    expect(applyPackageManifestUpdates).toHaveBeenCalledTimes(1);
+    expect(runPnpmCommand).toHaveBeenCalledWith(baseOptions.projectDir, "install", []);
   });
 
   it("passes registry response size overrides to metadata fetches", async () => {

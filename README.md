@@ -51,7 +51,13 @@ When the dry-run output looks right, run the command without `--dry-run`:
 pnpm-mature update --age 7
 ```
 
-The CLI writes the selected direct dependency versions into `package.json`, then runs `pnpm update`. Successful runs keep the updated versions in `package.json`; failed runs roll the manifest back when possible.
+The CLI prints the generated `package.json` updates and asks for confirmation in interactive terminals before writing the selected direct dependency versions into `package.json`, then runs `pnpm update`. Successful runs keep the updated versions in `package.json`; failed runs roll the manifest back when possible.
+
+Use `--yes` to skip the interactive confirmation prompt:
+
+```bash
+pnpm-mature update --age 7 --yes
+```
 
 ### 4. Use install mode
 
@@ -95,11 +101,13 @@ Version `0.1.0` supports:
 	- `major` and `all` allow mature updates across major versions
 	- passing `-p` with no value defaults to `all`
 - `-d, --dry-run`
+- `-y, --yes` to skip the interactive update confirmation prompt
 - `--max-registry-mib <mib>` or `--registry-max-response-mib <mib>` to raise the npm registry response safety limit if a legitimate package exceeds the default
 - optional direct dependency targeting by package name, for example `pnpm-mature update react -a 7`, which rewrites only the `react` entry in `package.json`
 - single-package targeting leaves the rest of `package.json` untouched while still letting pnpm update the selected dependency
 - direct dependency discovery from `dependencies`, `devDependencies`, `optionalDependencies`, and `peerDependencies`
 - semver-compatible version selection using npm registry metadata
+- interactive confirmation before `update` changes `package.json`
 - package.json version rewrites that persist after successful runs
 
 Not yet supported:
@@ -150,6 +158,7 @@ bun run build
 pnpm-mature update --age 7
 pnpm-mature update react --age 7
 pnpm-mature update -a 7
+pnpm-mature update -a 7 -y
 pnpm-mature install --age 14
 pnpm-mature install react --age 14
 pnpm-mature update -a 7 -d

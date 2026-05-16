@@ -53,6 +53,8 @@ export interface DependencySelection {
 
 export interface CommandOptions {
   age?: number;
+  assumeYes: boolean;
+  confirmUpdate?: () => Promise<boolean>;
   dependencyNames?: string[];
   dryRun: boolean;
   ignorePinned?: "all" | "major" | "minor";
