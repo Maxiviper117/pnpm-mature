@@ -46,7 +46,7 @@ export async function runMatureCommand(
     const registryMeta = await fetchRegistryPackageMeta(dependency.name, {
       maxResponseMiB: options.registryMaxResponseMiB,
     });
-    return selectMatureVersion(dependency, registryMeta, minimumAgeMinutes, options.ignorePinned);
+    return selectMatureVersion(dependency, registryMeta, minimumAgeMinutes, options.relax);
   });
 
   reportSelections(registryResults, minimumAgeMinutes, unsupported);

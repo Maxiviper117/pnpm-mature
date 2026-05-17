@@ -8,12 +8,12 @@ export function selectMatureVersion(
   dependency: DependencySpec,
   registryMeta: RegistryPackageMeta,
   minimumAgeMinutes: number,
-  ignorePinned: CommandOptions["ignorePinned"] = undefined,
+  relax: CommandOptions["relax"] = undefined,
   now = new Date(),
 ): DependencySelection {
   const cutoff = new Date(now.getTime() - minimumAgeMinutes * 60 * 1000);
   const latest = resolveLatestVersion(registryMeta);
-  const effectiveSpec = resolveEffectiveSpec(dependency.spec, ignorePinned);
+  const effectiveSpec = resolveEffectiveSpec(dependency.spec, relax);
   const compatible = registryMeta.versions.filter((version) =>
     semver.satisfies(version.version, effectiveSpec),
   );
@@ -28,7 +28,7 @@ export function selectMatureVersion(
       skippedIncompatible: registryMeta.versions.length - compatible.length,
       reason:
         compatible.length === 0
-          ? `No registry versions satisfy ${describeEffectiveSpec(dependency.spec, effectiveSpec, ignorePinned)}`
+          ? `No registry versions satisfy ${describeEffectiveSpec(dependency.spec, effectiveSpec, relax)}`
           : `No compatible versions are older than ${formatMinimumAgeLongLabel(minimumAgeMinutes)}`,
     };
   }
@@ -59,41 +59,42 @@ function resolveLatestVersion(registryMeta: RegistryPackageMeta) {
   return latestStable ?? registryMeta.versions[0];
 }
 
-function resolveEffectiveSpec(
-  declaredSpec: string,
-  ignorePinned: CommandOptions["ignorePinned"],
-): string {
-  if (!ignorePinned) {
+function resolveEffectiveSpec(declaredSpec: string, relax: CommandOptions["relax"]): string {
+  if (!relax) {
     return declaredSpec;
   }
 
   const pinnedVersion = semver.valid(declaredSpec);
-
-  if (!pinnedVersion) {
-    return declaredSpec;
+  if (pinnedVersion) {
+    return widenSpec(pinnedVersion, relax);
   }
 
-  const parsedVersion = semver.parse(pinnedVersion);
-
-  if (!parsedVersion) {
-    return declaredSpec;
+  const coerced = semver.coerce(declaredSpec);
+  if (coerced) {
+    return widenSpec(coerced.version, relax);
   }
 
-  if (ignorePinned === "major" || ignorePinned === "all") {
-    return `>=${pinnedVersion}`;
+  return declaredSpec;
+}
+
+function widenSpec(version: string, level: "all" | "major" | "minor"): string {
+  const parsedVersion = semver.parse(version);
+
+  if (parsedVersion && level === "minor") {
+    return `* <${parsedVersion.major + 1}.0.0`;
   }
 
-  return `>=${pinnedVersion} <${parsedVersion.major + 1}.0.0`;
+  return `*`;
 }
 
 function describeEffectiveSpec(
   declaredSpec: string,
   effectiveSpec: string,
-  ignorePinned: CommandOptions["ignorePinned"],
+  relax: CommandOptions["relax"],
 ): string {
-  if (!ignorePinned || effectiveSpec === declaredSpec) {
+  if (effectiveSpec === declaredSpec || !relax) {
     return `declared range ${declaredSpec}`;
   }
 
-  return `effective range ${effectiveSpec} from pinned ${declaredSpec} (--ignore-pinned ${ignorePinned})`;
+  return `effective range ${effectiveSpec} from ${declaredSpec} (--relax ${relax})`;
 }

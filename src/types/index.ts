@@ -57,7 +57,7 @@ export interface CommandOptions {
   confirmUpdate?: () => Promise<boolean>;
   dependencyNames?: string[];
   dryRun: boolean;
-  ignorePinned?: "all" | "major" | "minor";
+  relax?: "all" | "major" | "minor";
   includeTransitive: boolean;
   projectDir: string;
   registryMaxResponseMiB?: number;

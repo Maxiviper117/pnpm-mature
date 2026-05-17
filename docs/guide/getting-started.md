@@ -42,16 +42,18 @@ Target a single supported direct dependency when you do not want to inspect or u
 pnpm-mature update react --age 7
 ```
 
-## Exact pinned versions
+## Relaxing constraints
 
-Exact pinned dependencies such as `1.2.3` stay pinned by default, so pnpm-mature only selects that exact version if it is old enough.
+Exact pinned dependencies such as `1.2.3` stay pinned by default, and semver ranges such as `^25.8.0` or `~1.2.3` stay within their declared range by default.
 
-Use `--ignore-pinned` when you want exact pins to move to newer mature releases:
+Use `--relax` (short `-r`) to widen all constraints so mature updates can move freely:
 
 ```bash
-pnpm-mature update --age 7 --ignore-pinned minor --dry-run
-pnpm-mature update --age 7 --ignore-pinned major --dry-run
-pnpm-mature update --age 7 --ignore-pinned --dry-run
+pnpm-mature update --age 7 --relax minor --dry-run
+pnpm-mature update --age 7 --relax major --dry-run
+pnpm-mature update --age 7 --relax --dry-run
 ```
 
-`minor` allows newer mature versions within the same major. `major` and `all` allow newer mature major versions too. Passing `--ignore-pinned` without a value defaults to `all`.
+`minor` removes the lower bound while staying below the next major (`* <major+1.0.0`). `major` and `all` remove all bounds (`*`), allowing selection from any version including older majors. Passing `--relax` without a value defaults to `all`.
+
+The same flag applies to both exact pinned versions and semver ranges.

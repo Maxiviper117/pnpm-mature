@@ -75,11 +75,11 @@ Read the maturity threshold from pnpm global config instead of passing `--age`:
 pnpm-mature update --use-pnpm-global-config --dry-run
 ```
 
-Widen exact pinned versions while still enforcing the maturity threshold:
+Relax version constraints while still enforcing the maturity threshold:
 
 ```bash
-pnpm-mature update --age 7 --ignore-pinned minor --dry-run
-pnpm-mature update --age 7 --ignore-pinned --dry-run
+pnpm-mature update --age 7 --relax minor --dry-run
+pnpm-mature update --age 7 --relax --dry-run
 ```
 
 If a legitimate package has an unusually large npm registry response, raise the safety limit:
@@ -96,10 +96,11 @@ Version `0.1.0` supports:
 - `pnpm-mature install [package...] -a <days>`
 - `-g, --use-pnpm-global-config` to read `minimumReleaseAge` from global pnpm config when `--age` is omitted
 	- pnpm stores `minimumReleaseAge` in minutes, and pnpm-mature now honors that value directly
-- `-p, --ignore-pinned [minor|major|all]` to widen exact pinned versions while still enforcing the maturity threshold
+- `-r, --relax [minor|major|all]` to relax version constraints while still enforcing the maturity threshold
+	- applies to both exact pinned versions and semver ranges
 	- `minor` stays within the current major
 	- `major` and `all` allow mature updates across major versions
-	- passing `-p` with no value defaults to `all`
+	- passing `-r` with no value defaults to `all`
 - `-d, --dry-run`
 - `-y, --yes` to skip the interactive update confirmation prompt
 - `--max-registry-mib <mib>` or `--registry-max-response-mib <mib>` to raise the npm registry response safety limit if a legitimate package exceeds the default
@@ -163,8 +164,8 @@ pnpm-mature install --age 14
 pnpm-mature install react --age 14
 pnpm-mature update -a 7 -d
 pnpm-mature update -g -d
-pnpm-mature update -a 7 -p minor -d
-pnpm-mature update -a 7 -p -d
+pnpm-mature update -a 7 -r minor -d
+pnpm-mature update -a 7 -r -d
 ```
 
 Example dry-run output:
