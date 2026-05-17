@@ -13,18 +13,17 @@ The high-level flow is:
 
 That design keeps peer dependency handling, lockfile generation, and deduplication inside pnpm while making the selected direct dependency versions explicit in `package.json`.
 
-## Exact pinned versions
+## Relaxing constraints
 
-By default, exact pinned specs such as `1.2.3` remain exact. pnpm-mature will only select that same version, and it must still satisfy the configured maturity threshold.
+By default, exact pinned specs such as `1.2.3` remain exact, and semver ranges such as `^25.8.0` or `~1.2.3` keep their normal semver compatibility rules. No relaxation is applied.
 
-`--ignore-pinned` changes only exact pinned specs before selection:
+`--relax` (short `-r`) applies the same widening to both exact pinned versions and semver ranges before selection:
 
-- `--ignore-pinned minor` treats an exact pin as compatible with newer mature versions in the same major.
-- `--ignore-pinned major` allows newer mature versions across majors.
-- `--ignore-pinned all` is equivalent to `major`.
-- `--ignore-pinned` with no value defaults to `all`.
+- `--relax minor` treats the spec as compatible with versions below the next major (`* <major+1.0.0`).
+- `--relax major` and `--relax all` treat the spec as compatible with any version (`*`).
+- `--relax` with no value defaults to `all`.
 
-Existing semver ranges such as `^1.2.3` or `~1.2.3` keep their normal semver compatibility rules.
+This applies uniformly regardless of whether the declared spec is a pin or a range.
 
 ## Registry response limit
 

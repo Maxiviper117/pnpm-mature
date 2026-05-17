@@ -18,4 +18,4 @@ The MVP currently skips these dependency spec types:
 
 Transitive dependency constraints and workspace-aware resolution are planned but not yet implemented.
 
-Exact pinned versions such as `1.2.3` are supported by default as exact matches. When you pass `--ignore-pinned minor`, pnpm-mature widens exact pins to newer mature versions within the same major. When you pass `--ignore-pinned major`, `--ignore-pinned all`, or a bare `--ignore-pinned`, pnpm-mature allows newer mature versions across majors. Existing semver ranges stay unchanged.
+When you pass `--relax minor`, pnpm-mature widens the constraint to versions below the next major. When you pass `--relax major`, `--relax all`, or a bare `--relax`, pnpm-mature removes all bounds, allowing selection from any version including older majors. This flag applies uniformly to both exact pinned versions and semver ranges.

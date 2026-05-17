@@ -47,11 +47,11 @@ for (const definition of [
     )
     .addOption(
       new Option(
-        "-p, --ignore-pinned [level]",
-        "Widen exact pinned versions so mature updates can move within the same major or across majors. Defaults to all when passed without a value.",
+        "-r, --relax [level]",
+        "Relax declared version constraints so mature updates can move within the same major or across majors. Applies to both exact pinned versions and semver ranges. Defaults to all when passed without a value.",
       )
         .preset("all")
-        .argParser(parseIgnorePinnedLevel),
+        .argParser(parseRelaxLevel),
     )
     .option(
       "-d, --dry-run",
@@ -84,7 +84,7 @@ for (const definition of [
         assumeYes: Boolean(commandFlags.yes),
         dependencyNames: normalizeDependencyNames(packages),
         dryRun: Boolean(commandFlags.dryRun),
-        ignorePinned: commandFlags.ignorePinned,
+        relax: commandFlags.relax,
         includeTransitive: Boolean(commandFlags.includeTransitive),
         projectDir: process.cwd(),
         registryMaxResponseMiB,
@@ -114,7 +114,7 @@ function parsePositiveInt(value: string): number {
   return parsed;
 }
 
-function parseIgnorePinnedLevel(value: string): "all" | "major" | "minor" {
+function parseRelaxLevel(value: string): "all" | "major" | "minor" {
   if (value === "all" || value === "major" || value === "minor") {
     return value;
   }

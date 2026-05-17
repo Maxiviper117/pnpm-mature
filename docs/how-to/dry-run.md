@@ -15,16 +15,16 @@ The output shows:
 
 If no compatible version is old enough, the command exits non-zero so you can block unsafe updates in automation.
 
-## Preview pinned dependency updates
+## Preview constraint relaxation
 
-Exact pinned dependencies stay pinned unless you opt into widening them. Use dry runs to inspect what would happen before applying the update:
+Exact pinned dependencies and semver ranges stay strict unless you relax constraints with `--relax`. Use dry runs to inspect what would happen:
 
 ```bash
-pnpm-mature update --age 7 --dry-run --ignore-pinned minor
-pnpm-mature update --age 7 --dry-run --ignore-pinned
+pnpm-mature update --age 7 --dry-run --relax minor
+pnpm-mature update --age 7 --dry-run --relax
 ```
 
-`--ignore-pinned minor` keeps exact pins within the current major. A bare `--ignore-pinned` defaults to `all`, which allows mature versions across majors.
+`--relax minor` removes the lower bound while staying below the next major. A bare `--relax` defaults to `all`, which removes all bounds. The flag applies uniformly to both pinned versions and semver ranges.
 
 ## Large registry responses
 

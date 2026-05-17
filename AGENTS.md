@@ -130,8 +130,8 @@ npm pack --dry-run
 - Both commands accept optional direct dependency names after the command name, for example `pnpm-mature update react --age 7`. Every requested package must already exist in `package.json` with a supported spec.
 - The maturity threshold is expressed in days via `--age <days>` and must be a positive integer.
 - When `--use-pnpm-global-config` is provided and `--age` is omitted, the CLI reads `minimumReleaseAge` from pnpm global config in minutes and uses that value directly.
-- `--ignore-pinned minor` widens exact pinned versions to newer mature releases within the same major; `--ignore-pinned major` and `--ignore-pinned all` allow newer mature major versions as well. A bare `-p`/`--ignore-pinned` defaults to `all`.
-- Short aliases are supported for the current flags: `-a` for `--age`, `-g` for `--use-pnpm-global-config`, `-p` for `--ignore-pinned`, `-d` for `--dry-run`, `-y` for `--yes`, and `-t` for `--include-transitive`.
+- `--relax minor` removes the lower bound on declared version constraints while staying below the next major (`* <major+1.0.0`); `--relax major` and `--relax all` remove all bounds (`*`), allowing selection from any major including older ones. A bare `-r`/`--relax` defaults to `all`. This flag applies to both exact pinned versions (e.g., `"4.18.2"`) and semver ranges (e.g., `^25.8.0`).
+- Short aliases are supported for the current flags: `-a` for `--age`, `-g` for `--use-pnpm-global-config`, `-r` for `--relax`, `-d` for `--dry-run`, `-y` for `--yes`, and `-t` for `--include-transitive`.
 - `--max-registry-mib <mib>` and its longer alias `--registry-max-response-mib <mib>` override the default npm registry response safety limit of 100 MiB for legitimate large packuments.
 - The current implementation only considers direct dependencies from:
   - `dependencies`
