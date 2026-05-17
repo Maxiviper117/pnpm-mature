@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.6.0...pnpm-mature-v0.7.0) (2026-05-17)
+
+
+### Features
+
+* unify --ignore-pinned and --ignore-range into single --relax flag ([#12](https://github.com/Maxiviper117/pnpm-mature/issues/12)) ([1346fb3](https://github.com/Maxiviper117/pnpm-mature/commit/1346fb3e32553760c6009cf192e2306e914a444b))
+
 ## [0.6.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.5.0...pnpm-mature-v0.6.0) (2026-05-17)
 
 
