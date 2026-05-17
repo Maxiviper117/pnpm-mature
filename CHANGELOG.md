@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.5.0...pnpm-mature-v0.6.0) (2026-05-17)
+
+
+### Features
+
+* notify users when a new CLI version is available on npm ([#10](https://github.com/Maxiviper117/pnpm-mature/issues/10)) ([404c536](https://github.com/Maxiviper117/pnpm-mature/commit/404c536179aedf115a03bd54d3596ab9a07edcf6))
+
 ## [0.5.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.4.0...pnpm-mature-v0.5.0) (2026-05-16)
 
 
