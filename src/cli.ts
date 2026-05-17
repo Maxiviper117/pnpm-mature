@@ -6,13 +6,15 @@ import { runInstallCommand } from "./commands/install";
 import { runUpdateCommand } from "./commands/update";
 import { normalizeDependencyNames } from "./package-name/normalize";
 import type { CommandOptions } from "./types";
+import { checkForNewVersion } from "./utils/version-notice";
+import pkg from "../package.json";
 
 const program = new Command();
 
 program
   .name("pnpm-mature")
   .description("Age-constrained dependency updates and installs powered by pnpm.")
-  .version("0.1.0");
+  .version(pkg.version);
 
 for (const definition of [
   {
@@ -68,6 +70,12 @@ for (const definition of [
     )
     .option("--max-registry-mib <mib>", "Alias for --registry-max-response-mib.", parsePositiveInt)
     .action(async (packages: string[], commandFlags) => {
+      const notice = await checkForNewVersion(pkg.version);
+
+      if (notice) {
+        console.error(notice);
+      }
+
       const registryMaxResponseMiB =
         commandFlags.registryMaxResponseMib ?? commandFlags.maxRegistryMib;
 
