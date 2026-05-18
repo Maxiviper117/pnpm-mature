@@ -10,6 +10,7 @@ import { checkForNewVersion } from "./utils/version-notice";
 import pkg from "../package.json";
 
 const program = new Command();
+const MAX_AGE_DAYS = 3650;
 
 program
   .name("pnpm-mature")
@@ -38,7 +39,7 @@ for (const definition of [
     .option(
       "-a, --age <days>",
       "Only allow versions published more than this many days ago.",
-      parsePositiveInt,
+      parseAgeDays,
     )
     .option(
       "-g, --use-pnpm-global-config",
@@ -104,7 +105,21 @@ for (const definition of [
 
 await program.parseAsync(process.argv);
 
+function parseAgeDays(value: string): number {
+  const parsed = parsePositiveInt(value);
+
+  if (parsed > MAX_AGE_DAYS) {
+    throw new InvalidArgumentError(`must be less than or equal to ${MAX_AGE_DAYS}`);
+  }
+
+  return parsed;
+}
+
 function parsePositiveInt(value: string): number {
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new InvalidArgumentError("must be a positive integer");
+  }
+
   const parsed = Number.parseInt(value, 10);
 
   if (!Number.isInteger(parsed) || parsed <= 0) {

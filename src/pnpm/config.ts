@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 
 import type { CommandOptions } from "../types";
+import { createPnpmChildEnv } from "./env";
 
 export type PnpmConfigReader = (key: string) => Promise<string | undefined>;
 
@@ -75,6 +76,7 @@ async function readPnpmGlobalConfigValue(key: string): Promise<string | undefine
     const stdoutChunks: string[] = [];
     const stderrChunks: string[] = [];
     const child = spawn(executable, args, {
+      env: createPnpmChildEnv(),
       stdio: ["ignore", "pipe", "pipe"],
       shell: false,
     });

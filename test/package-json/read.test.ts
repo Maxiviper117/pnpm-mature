@@ -54,6 +54,27 @@ describe("collectDirectDependencies", () => {
       },
     ]);
   });
+
+  it("classifies invalid package names as unsupported", () => {
+    const manifest: PackageManifest = {
+      dependencies: {
+        "\u001b[31mevil\u001b[0m": "^1.0.0",
+        react: "^18.0.0",
+      },
+    };
+
+    const result = collectDirectDependencies(manifest);
+
+    expect(result.supported).toEqual([{ field: "dependencies", name: "react", spec: "^18.0.0" }]);
+    expect(result.unsupported).toEqual([
+      {
+        field: "dependencies",
+        name: "\u001b[31mevil\u001b[0m",
+        reason: "invalid package name",
+        spec: "^1.0.0",
+      },
+    ]);
+  });
 });
 
 describe("readPackageManifest", () => {

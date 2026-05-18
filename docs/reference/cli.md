@@ -19,8 +19,8 @@ Uses the same maturity flow, writes the selected versions into `package.json`, a
 ## Options
 
 - `[package...]`: Optional direct dependency names to target. Every requested package must already exist in `package.json` with a supported dependency spec. For example, `pnpm-mature update react --age 7` rewrites only the `react` entry in `package.json`.
-- `-a, --age <days>`: Positive integer threshold in days. Overrides config if both are provided.
-- `-g, --use-pnpm-global-config`: Read `minimumReleaseAge` from pnpm global config when `--age` is omitted. pnpm stores this value in minutes.
+- `-a, --age <days>`: Positive integer threshold in days, up to `3650`. Overrides config if both are provided.
+- `-g, --use-pnpm-global-config`: Read `minimumReleaseAge` from pnpm global config when `--age` is omitted. pnpm stores this value in minutes, and the resolved threshold must not exceed `3650` days.
 - `-r, --relax [minor|major|all]`: Relax declared version constraints so mature updates can move within the same major or across majors. Applies to both exact pinned versions (like `"4.18.2"`) and semver ranges (`^25.8.0`, `~1.2.3`). `minor` removes the lower bound while staying below the next major (`* <major+1.0.0`). `major` and `all` remove all bounds (`*`), allowing selection from any version including older majors. Pass `-r` with no value to default to `all`.
 - `-d, --dry-run`: Print selections and generated `package.json` updates without running pnpm.
 - `-y, --yes`: Skip the interactive `update` confirmation prompt.

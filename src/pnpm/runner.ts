@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
 
+import { createPnpmChildEnv } from "./env";
+
 export async function runPnpmCommand(
   projectDir: string,
   command: "update" | "install",
@@ -10,6 +12,7 @@ export async function runPnpmCommand(
   return await new Promise<number>((resolve, reject) => {
     const child = spawn(executable, [command, ...args], {
       cwd: projectDir,
+      env: createPnpmChildEnv(),
       stdio: "inherit",
       shell: false,
     });

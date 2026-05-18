@@ -11,7 +11,11 @@ import { runPnpmCommand } from "../pnpm/runner";
 import { fetchRegistryPackageMeta } from "../registry/npm";
 import type { CommandOptions, DependencySelection } from "../types";
 import { mapWithConcurrency } from "../utils/concurrency";
+import { sanitizeTerminalText } from "../utils/terminal";
 import { readPackageManifest } from "../package-json/read";
+
+const MAX_AGE_DAYS = 3650;
+const MAX_MINIMUM_AGE_MINUTES = MAX_AGE_DAYS * 24 * 60;
 
 export async function runMatureCommand(
   command: "update" | "install",
@@ -168,6 +172,10 @@ function validateOptions(options: CommandOptions, minimumAgeMinutes: number): vo
     throw new Error("Minimum release age must resolve to a positive integer number of minutes");
   }
 
+  if (minimumAgeMinutes > MAX_MINIMUM_AGE_MINUTES) {
+    throw new Error(`Minimum release age must be less than or equal to ${MAX_AGE_DAYS} days`);
+  }
+
   if (options.includeTransitive) {
     throw new Error(
       "--include-transitive is reserved for a later release and is not supported in 0.1.0",
@@ -190,19 +198,19 @@ function reportSelections(
   for (const selection of selections) {
     const { dependency, latest, selected, skippedRecent, reason } = selection;
 
-    console.log(`\n${pc.bold(dependency.name)}`);
-    console.log(`  declared: ${dependency.spec}`);
+    console.log(`\n${pc.bold(safe(dependency.name))}`);
+    console.log(`  declared: ${safe(dependency.spec)}`);
     console.log(`  latest: ${formatVersionLine(latest)}`);
     console.log(`  selected: ${formatVersionLine(selected)}`);
 
     if (skippedRecent.length > 0) {
       console.log(
-        `  skipped recent (< ${formatMinimumAgeShortLabel(minimumAgeMinutes)}): ${skippedRecent.map((version) => version.version).join(", ")}`,
+        `  skipped recent (< ${formatMinimumAgeShortLabel(minimumAgeMinutes)}): ${skippedRecent.map((version) => safe(version.version)).join(", ")}`,
       );
     }
 
     if (reason) {
-      console.log(`  reason: ${pc.red(reason)}`);
+      console.log(`  reason: ${pc.red(safe(reason))}`);
     }
   }
 
@@ -219,7 +227,7 @@ function reportUnsupported(
   console.log(pc.yellow(`\nSkipped ${unsupported.length} unsupported dependencies:`));
 
   for (const entry of unsupported) {
-    console.log(`  ${entry.name}@${entry.spec} - ${entry.reason}`);
+    console.log(`  ${safe(entry.name)}@${safe(entry.spec)} - ${safe(entry.reason)}`);
   }
 }
 
@@ -228,15 +236,19 @@ function formatVersionLine(version: { version: string; publishedAt: Date } | und
     return pc.dim("none");
   }
 
-  return `${version.version} (${version.publishedAt.toISOString().slice(0, 10)})`;
+  return `${safe(version.version)} (${version.publishedAt.toISOString().slice(0, 10)})`;
 }
 
 function reportManifestUpdates(selectedVersions: Record<string, string>): void {
   console.log(pc.bold("\nGenerated package.json updates:"));
 
   for (const [name, version] of Object.entries(selectedVersions)) {
-    console.log(`  ${name}: ${version}`);
+    console.log(`  ${safe(name)}: ${safe(version)}`);
   }
+}
+
+function safe(value: string): string {
+  return sanitizeTerminalText(value);
 }
 
 function shouldConfirmUpdate(options: CommandOptions): boolean {
