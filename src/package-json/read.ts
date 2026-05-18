@@ -7,6 +7,7 @@ import type {
   PackageManifest,
   UnsupportedDependency,
 } from "../types";
+import { isValidPackageName } from "../package-name/normalize";
 
 const SUPPORTED_FIELDS: DependencyField[] = [
   "dependencies",
@@ -69,6 +70,11 @@ export function collectDirectDependencies(manifest: PackageManifest): {
 
       if (reason) {
         unsupported.push({ field, name, spec, reason });
+        continue;
+      }
+
+      if (!isValidPackageName(name)) {
+        unsupported.push({ field, name, spec, reason: "invalid package name" });
         continue;
       }
 

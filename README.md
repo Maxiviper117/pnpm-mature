@@ -95,6 +95,7 @@ Version `0.1.0` supports:
 - `pnpm-mature update [package...] -a <days>`
 - `pnpm-mature install [package...] -a <days>`
 - `-g, --use-pnpm-global-config` to read `minimumReleaseAge` from global pnpm config when `--age` is omitted
+- `--age` accepts positive integer day values up to `3650`
 	- pnpm stores `minimumReleaseAge` in minutes, and pnpm-mature now honors that value directly
 - `-r, --relax [minor|major|all]` to relax version constraints while still enforcing the maturity threshold
 	- applies to both exact pinned versions and semver ranges

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 type SpawnMock = (
   command: string,
   args: string[],
-  options: { cwd: string; shell: boolean; stdio: "inherit" },
+  options: { cwd: string; env: NodeJS.ProcessEnv; shell: boolean; stdio: "inherit" },
 ) => {
   once: (event: string, handler: (...args: unknown[]) => void) => void;
 };
@@ -33,6 +33,7 @@ describe("runPnpmCommand", () => {
 
     expect(spawnMock).toHaveBeenCalledWith("pnpm", ["update", "react"], {
       cwd: "D:/tmp/project",
+      env: expect.objectContaining({}),
       shell: false,
       stdio: "inherit",
     });

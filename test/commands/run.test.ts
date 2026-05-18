@@ -263,6 +263,19 @@ describe("runMatureCommand", () => {
 
     expect(fetchRegistryPackageMeta).not.toHaveBeenCalled();
   });
+
+  it("rejects extreme age values", async () => {
+    asMock(resolveMinimumAgeMinutes).mockResolvedValue(3651 * 24 * 60);
+
+    await expect(
+      runMatureCommand("update", {
+        ...baseOptions,
+        age: 3651,
+      }),
+    ).rejects.toThrow("Minimum release age must be less than or equal to 3650 days");
+
+    expect(fetchRegistryPackageMeta).not.toHaveBeenCalled();
+  });
 });
 
 function createSelection(name: string, spec: string): DependencySelection {
