@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.1](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.7.0...pnpm-mature-v0.7.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* harden CLI against terminal injection and extreme inputs ([#14](https://github.com/Maxiviper117/pnpm-mature/issues/14)) ([a2403c7](https://github.com/Maxiviper117/pnpm-mature/commit/a2403c75734fbe128fe9e1a4c86f99570e59027b))
+
 ## [0.7.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.6.0...pnpm-mature-v0.7.0) (2026-05-17)
 
 
