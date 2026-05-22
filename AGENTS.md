@@ -73,7 +73,7 @@ npm pack --dry-run
 ## Releases
 
 - CI workflow lives in `.github/workflows/ci.yml`.
-- CI currently runs on both pushes and pull requests.
+- CI runs on pull requests and on pushes to `main`. Feature branch pushes rely on pull request CI to avoid duplicate workflow runs for the same commit.
 - Release Please config lives in `release-please-config.json`.
 - Release Please manifest lives in `.release-please-manifest.json`.
 - Release workflow lives in `.github/workflows/release-please.yml`.
