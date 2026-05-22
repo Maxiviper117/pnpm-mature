@@ -23,10 +23,17 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
+      - name: Require release token
+        if: ${{ secrets.RELEASE_PLEASE_TOKEN == '' }}
+        run: |
+          echo "RELEASE_PLEASE_TOKEN is required for Release Please."
+          echo "Use a PAT or GitHub App token so CI runs automatically on release PRs."
+          exit 1
+
       - id: release
         uses: googleapis/release-please-action@v4
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN != '' && secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -49,6 +56,8 @@ jobs:
         with:
           bun-version: 1.3.4
 
+      - run: npm install --global npm@11.15.0
+      - run: npm --version
       - run: bun install --frozen-lockfile
       - run: bun run test
       - run: bun run build
