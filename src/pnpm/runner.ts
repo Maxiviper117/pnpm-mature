@@ -7,15 +7,20 @@ export async function runPnpmCommand(
   command: "update" | "install",
   args: string[] = [],
 ): Promise<number> {
-  const executable = "pnpm";
+  const isWindows = process.platform === "win32";
+  const spawnArgs = [command, ...args];
 
   return await new Promise<number>((resolve, reject) => {
-    const child = spawn(executable, [command, ...args], {
-      cwd: projectDir,
-      env: createPnpmChildEnv(),
-      stdio: "inherit",
-      shell: false,
-    });
+    const child = spawn(
+      isWindows ? `pnpm ${escapeShellArgs(spawnArgs)}` : "pnpm",
+      isWindows ? [] : spawnArgs,
+      {
+        cwd: projectDir,
+        env: createPnpmChildEnv(),
+        stdio: "inherit",
+        shell: isWindows,
+      },
+    );
 
     child.once("error", (error) => {
       reject(new Error(`Failed to start pnpm: ${error.message}`));
@@ -25,4 +30,15 @@ export async function runPnpmCommand(
       resolve(code ?? 1);
     });
   });
+}
+
+function escapeShellArgs(args: string[]): string {
+  return args
+    .map((arg) => {
+      if (/[ \t"&|<>()^]/.test(arg)) {
+        return `"${arg.replace(/"/g, '\\"')}"`;
+      }
+      return arg;
+    })
+    .join(" ");
 }

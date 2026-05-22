@@ -25,16 +25,16 @@ describe("runPnpmCommand", () => {
     vi.resetModules();
   });
 
-  it("uses direct pnpm execution without a shell on Windows", async () => {
+  it("uses shell on Windows to resolve .cmd executables", async () => {
     vi.spyOn(process, "platform", "get").mockReturnValue("win32");
     const { runPnpmCommand } = await import("../../src/pnpm/runner");
 
     await expect(runPnpmCommand("D:/tmp/project", "update", ["react"])).resolves.toBe(0);
 
-    expect(spawnMock).toHaveBeenCalledWith("pnpm", ["update", "react"], {
+    expect(spawnMock).toHaveBeenCalledWith("pnpm update react", [], {
       cwd: "D:/tmp/project",
       env: expect.objectContaining({}),
-      shell: false,
+      shell: true,
       stdio: "inherit",
     });
   });
