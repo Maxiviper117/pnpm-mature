@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      RELEASE_PLEASE_TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN }}
     concurrency:
       group: release-please-${{ github.ref }}
       cancel-in-progress: false
@@ -24,11 +25,12 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - name: Require release token
-        if: ${{ secrets.RELEASE_PLEASE_TOKEN == '' }}
         run: |
-          echo "RELEASE_PLEASE_TOKEN is required for Release Please."
-          echo "Use a PAT or GitHub App token so CI runs automatically on release PRs."
-          exit 1
+          if [ -z "$RELEASE_PLEASE_TOKEN" ]; then
+            echo "RELEASE_PLEASE_TOKEN is required for Release Please."
+            echo "Use a PAT or GitHub App token so CI runs automatically on release PRs."
+            exit 1
+          fi
 
       - id: release
         uses: googleapis/release-please-action@v4
