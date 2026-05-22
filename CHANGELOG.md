@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.8.0...pnpm-mature-v0.9.0) (2026-05-22)
+
+
+### Features
+
+* stage npm releases in CI ([#19](https://github.com/Maxiviper117/pnpm-mature/issues/19)) ([3bd76a0](https://github.com/Maxiviper117/pnpm-mature/commit/3bd76a0a3a5d34c95865ba8833befed164a96983))
+
 ## [0.8.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.7.1...pnpm-mature-v0.8.0) (2026-05-22)
 
 
