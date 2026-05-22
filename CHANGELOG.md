@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.8.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.7.1...pnpm-mature-v0.8.0) (2026-05-22)
+
+
+### Features
+
+* add --write-only flag, interactive prompt, and Windows spawn fix ([#18](https://github.com/Maxiviper117/pnpm-mature/issues/18)) ([0867265](https://github.com/Maxiviper117/pnpm-mature/commit/08672659a5f296d7f6c9b336b83e7c85a29fc564))
+* add pull request template for consistent contributions ([e223301](https://github.com/Maxiviper117/pnpm-mature/commit/e223301bf6a3d9917b1557e752260d5961a1751d))
+
 ## [0.7.1](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.7.0...pnpm-mature-v0.7.1) (2026-05-18)
 
 
