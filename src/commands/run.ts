@@ -79,18 +79,31 @@ export async function runMatureCommand(
     return 0;
   }
 
-  if (command === "update" && shouldConfirmUpdate(options)) {
+  if (command === "update" && !options.writeOnly && shouldConfirmUpdate(options)) {
     reportManifestUpdates(selectedVersions);
 
-    const confirmed = await confirmUpdate(options);
+    const choice = await promptUpdateChoice(options);
 
-    if (!confirmed) {
+    if (choice === false) {
       console.log(pc.yellow("Update cancelled; package.json was not changed."));
       return 0;
+    }
+
+    if (choice === "write") {
+      options.writeOnly = true;
     }
   }
 
   const manifestMutation = await applyPackageManifestUpdates(options.projectDir, manifestUpdates);
+
+  if (options.writeOnly) {
+    await manifestMutation.commit();
+    console.log(
+      pc.green(`\nMature versions written to package.json. Run pnpm ${command} to apply.`),
+    );
+    return 0;
+  }
+
   const cleanupHandlers = installCleanupHandlers(manifestMutation.rollback);
   let succeeded = false;
 
@@ -259,9 +272,10 @@ function shouldConfirmUpdate(options: CommandOptions): boolean {
   return Boolean(options.confirmUpdate || (process.stdin.isTTY && process.stdout.isTTY));
 }
 
-async function confirmUpdate(options: CommandOptions): Promise<boolean> {
+async function promptUpdateChoice(options: CommandOptions): Promise<"write" | "run" | false> {
   if (options.confirmUpdate) {
-    return await options.confirmUpdate();
+    const result = await options.confirmUpdate();
+    return result ? "run" : false;
   }
 
   const prompt = readline.createInterface({
@@ -271,9 +285,19 @@ async function confirmUpdate(options: CommandOptions): Promise<boolean> {
 
   try {
     const answer = await prompt.question(
-      pc.bold("\nApply these changes and run pnpm update? [y/N] "),
+      pc.bold("\n[w] write-only  [y] write + update  [N] cancel "),
     );
-    return answer.trim().toLowerCase() === "y" || answer.trim().toLowerCase() === "yes";
+    const trimmed = answer.trim().toLowerCase();
+
+    if (trimmed === "w") {
+      return "write";
+    }
+
+    if (trimmed === "y" || trimmed === "yes") {
+      return "run";
+    }
+
+    return false;
   } finally {
     prompt.close();
   }

@@ -62,4 +62,5 @@ export interface CommandOptions {
   projectDir: string;
   registryMaxResponseMiB?: number;
   usePnpmGlobalConfig: boolean;
+  writeOnly: boolean;
 }

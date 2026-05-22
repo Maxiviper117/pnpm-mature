@@ -31,6 +31,7 @@ export default defineConfig({
           items: [
             { text: "Overview", link: "/how-to/" },
             { text: "Run a Dry Run", link: "/how-to/dry-run" },
+            { text: "Write Without pnpm", link: "/how-to/write-only" },
           ],
         },
         {

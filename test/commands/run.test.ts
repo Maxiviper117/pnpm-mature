@@ -60,6 +60,7 @@ describe("runMatureCommand", () => {
     includeTransitive: false,
     projectDir: "D:/tmp/project",
     usePnpmGlobalConfig: false,
+    writeOnly: false,
   };
 
   beforeEach(() => {

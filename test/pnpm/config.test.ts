@@ -30,6 +30,7 @@ describe("resolveMinimumAgeMinutes", () => {
     includeTransitive: false,
     projectDir: "D:/tmp/project",
     usePnpmGlobalConfig: false,
+    writeOnly: false,
   };
 
   it("prefers the explicit --age option", async () => {

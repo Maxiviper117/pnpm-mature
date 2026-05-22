@@ -60,6 +60,11 @@ for (const definition of [
     )
     .option("-y, --yes", "Skip the update confirmation prompt.", false)
     .option(
+      "-w, --write-only",
+      "Write mature versions to package.json and exit without running pnpm.",
+      false,
+    )
+    .option(
       "-t, --include-transitive",
       "Reserved for a future release. Currently unsupported.",
       false,
@@ -90,6 +95,7 @@ for (const definition of [
         projectDir: process.cwd(),
         registryMaxResponseMiB,
         usePnpmGlobalConfig: Boolean(commandFlags.usePnpmGlobalConfig),
+        writeOnly: Boolean(commandFlags.writeOnly),
       };
 
       try {
