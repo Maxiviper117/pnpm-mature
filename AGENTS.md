@@ -81,9 +81,11 @@ npm pack --dry-run
 - Release Please is manifest-driven for the root Node package and uses the fixed component/tag format `pnpm-mature-v<version>`.
 - Release publishes run to completion for a given ref; do not reintroduce `cancel-in-progress` on the release workflow unless the publish flow changes.
 - `bump-minor-pre-major: true` keeps breaking changes below `1.0.0` until an intentional stable release is requested.
-- Release Please creates release PRs and GitHub releases. npm publishing runs automatically in CI after a Release Please release is created on `main`.
+- Release Please creates release PRs and GitHub releases. npm staging runs automatically in CI after a Release Please release is created on `main`, and a maintainer must manually approve the staged package before it becomes publicly available.
 - The workflow may use an optional `RELEASE_PLEASE_TOKEN` secret; otherwise it falls back to `GITHUB_TOKEN`.
-- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC and publishes with `npm publish --access public --provenance`. Keep `id-token: write` intact unless the publishing model changes.
+- The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC and stages with `npm stage publish --access public --provenance`. Keep `id-token: write` intact unless the publishing model changes.
+- Configure the npm trusted publisher for `.github/workflows/release-please.yml` with `npm stage publish` permission. Stage approval still requires maintainer proof-of-presence and 2FA.
+- After CI stages a release, approve it manually through `npm stage approve <stage-id>` or the npmjs.com staged packages UI. Use `npm stage list @maxiviper117/pnpm-mature` to find the stage ID when approving from the CLI.
 - When ready for the first stable release, use a commit footer like `Release-As: 1.0.0`.
 - Keep commits Conventional Commits-compatible so Release Please can infer versions. Examples:
   - `feat: add maturity-aware install command`
