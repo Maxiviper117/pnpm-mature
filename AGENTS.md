@@ -82,7 +82,7 @@ npm pack --dry-run
 - Release publishes run to completion for a given ref; do not reintroduce `cancel-in-progress` on the release workflow unless the publish flow changes.
 - `bump-minor-pre-major: true` keeps breaking changes below `1.0.0` until an intentional stable release is requested.
 - Release Please creates release PRs and GitHub releases. npm staging runs automatically in CI after a Release Please release is created on `main`, and a maintainer must manually approve the staged package before it becomes publicly available.
-- The workflow may use an optional `RELEASE_PLEASE_TOKEN` secret; otherwise it falls back to `GITHUB_TOKEN`.
+- `RELEASE_PLEASE_TOKEN` is required. Configure it as a PAT or GitHub App token with enough permission to create and update branches, pull requests, releases, and labels so the release PR triggers normal CI instead of approval-gated `GITHUB_TOKEN` workflow runs.
 - The publish job is set up for npm Trusted Publishing via GitHub Actions OIDC and stages with `npm stage publish --access public --provenance`. Keep `id-token: write` intact unless the publishing model changes.
 - Configure the npm trusted publisher for `.github/workflows/release-please.yml` with `npm stage publish` permission. Stage approval still requires maintainer proof-of-presence and 2FA.
 - After CI stages a release, approve it manually through `npm stage approve <stage-id>` or the npmjs.com staged packages UI. Use `npm stage list @maxiviper117/pnpm-mature` to find the stage ID when approving from the CLI.
