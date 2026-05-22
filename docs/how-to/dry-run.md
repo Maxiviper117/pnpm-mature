@@ -37,3 +37,7 @@ pnpm-mature update --age 7 --dry-run --max-registry-mib 256
 ```
 
 The default limit is 100 MiB per package.
+
+## Related
+
+- [Write Versions Without Running pnpm](/how-to/write-only) — apply the changes to `package.json` and stop.
