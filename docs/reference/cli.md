@@ -25,6 +25,11 @@ Uses the same maturity flow, writes the selected versions into `package.json`, a
 - `-d, --dry-run`: Print selections and generated `package.json` updates without running pnpm.
 - `-y, --yes`: Skip the interactive `update` confirmation prompt.
 - `-t, --include-transitive`: Reserved for a future release and currently rejected.
+
+::: warning
+
+pnpm-mature currently only processes direct dependencies. Transitive (nested) dependencies discovered through the lockfile are not inspected or age-filtered. The `--include-transitive` flag exists as a placeholder and will be rejected if used.
+:::
 - `--max-registry-mib <mib>`: Override the maximum npm registry response size in MiB. The default is `100`. Use this only if pnpm-mature reports that a legitimate package exceeded the safety limit.
 - `--registry-max-response-mib <mib>`: Longer alias for `--max-registry-mib`.
 
@@ -36,4 +41,4 @@ In an interactive terminal, `update` prompts after printing the generated manife
 Apply these changes and run pnpm update? [y/N]
 ```
 
-Answer `y` or `yes` to proceed. Any other answer cancels before `package.json` is changed. Pass `-y` or `--yes` to skip the prompt. Non-interactive runs also skip the prompt so CI jobs do not hang.
+Answer `y` or `yes` to proceed. Any other answer cancels before `package.json` is changed. Pass `-y` or `--yes` to skip the prompt. Non-interactive runs also skip the prompt.

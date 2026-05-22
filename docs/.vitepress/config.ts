@@ -15,20 +15,8 @@ export default defineConfig({
   },
 
   themeConfig: {
-    nav: [
-      { text: "Guide", link: "/guide/" },
-      { text: "How-to", link: "/how-to/" },
-      { text: "Reference", link: "/reference/" },
-      { text: "Explanation", link: "/explanation/" },
-      { text: "Development", link: "/development/contributing" },
-      {
-        text: "npm",
-        link: "https://www.npmjs.com/package/@maxiviper117/pnpm-mature",
-      },
-    ],
-
     sidebar: {
-      "/guide/": [
+      "/": [
         {
           text: "Guide",
           collapsed: false,
@@ -37,19 +25,14 @@ export default defineConfig({
             { text: "Getting Started", link: "/guide/getting-started" },
           ],
         },
-      ],
-      "/how-to/": [
         {
           text: "How-to",
           collapsed: false,
           items: [
             { text: "Overview", link: "/how-to/" },
             { text: "Run a Dry Run", link: "/how-to/dry-run" },
-            { text: "Use with CI", link: "/how-to/use-with-ci" },
           ],
         },
-      ],
-      "/reference/": [
         {
           text: "Reference",
           collapsed: false,
@@ -59,8 +42,6 @@ export default defineConfig({
             { text: "Supported Dependencies", link: "/reference/supported-dependencies" },
           ],
         },
-      ],
-      "/explanation/": [
         {
           text: "Explanation",
           collapsed: false,
@@ -69,8 +50,6 @@ export default defineConfig({
             { text: "How It Works", link: "/explanation/how-it-works" },
           ],
         },
-      ],
-      "/development/": [
         {
           text: "Development",
           collapsed: false,
