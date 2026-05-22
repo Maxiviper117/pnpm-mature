@@ -160,6 +160,7 @@ describe("selectMatureVersion", () => {
       },
       7 * 24 * 60,
       "all",
+      new Date("2026-05-15T00:00:00.000Z"),
     );
 
     expect(result.selected?.version).toBe("3.9.0");
@@ -185,6 +186,7 @@ describe("selectMatureVersion", () => {
       },
       7 * 24 * 60,
       "minor",
+      new Date("2026-05-15T00:00:00.000Z"),
     );
 
     expect(result.selected?.version).toBe("3.9.0");
