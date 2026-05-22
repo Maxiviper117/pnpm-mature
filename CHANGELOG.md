@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.10.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.9.0...pnpm-mature-v0.10.0) (2026-05-22)
+
+
+### Features
+
+* require release please token ([#21](https://github.com/Maxiviper117/pnpm-mature/issues/21)) ([7f34e99](https://github.com/Maxiviper117/pnpm-mature/commit/7f34e99cde79eb2d56497d8319e91cde7e0b5a98))
+
+
+### Bug Fixes
+
+* validate release token without invalid workflow if ([4ef9dc9](https://github.com/Maxiviper117/pnpm-mature/commit/4ef9dc9f8af2d82c39e99a54fcd4cd393b8f2d3e))
+
 ## [0.9.0](https://github.com/Maxiviper117/pnpm-mature/compare/pnpm-mature-v0.8.0...pnpm-mature-v0.9.0) (2026-05-22)
 
 
